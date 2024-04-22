@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
+import 'dart:async';
+
+// files
 import 'points.dart';
 import 'pixelOperation.dart';
 import 'shape/shape.dart';
@@ -277,28 +280,69 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MyPainter extends CustomPainter {
-  final List<Point> points;
+  final ui.Image image;
   final Color color;
   final double thickness;
   final bool antiAliased;
 
-  MyPainter(this.points, this.color, this.thickness, this.antiAliased);
+  MyPainter({required this.image, required this.color, required this.thickness, required this.antiAliased});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Paint paint = Paint()
-    //   ..color = color
-    //   ..strokeCap = StrokeCap.round
-    //   ..strokeWidth = thickness
-    //   ..isAntiAlias = antiAliased;
+    final paint = Paint()
+      ..color = color
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = thickness
+      ..isAntiAlias = antiAliased;
 
-    // for (int i = 0; i < points.length - 1; i++) {
-    //   if (points[i] != null && points[i + 1] != null) {
-    //     canvas.drawLine(points[i], points[i + 1], paint);
-    //   }
-    // } 
-}
+    canvas.drawImage(image, Offset.zero, paint);
+  }
 
   @override
-  bool shouldRepaint(MyPainter oldDelegate) => true;
+  bool shouldRepaint(MyPainter oldDelegate) {
+    return image != oldDelegate.image || color != oldDelegate.color || thickness != oldDelegate.thickness || antiAliased != oldDelegate.antiAliased;
+  }
+}
+
+class ImagePainterWidget extends StatefulWidget {
+  final Uint8List imageData;
+
+  ImagePainterWidget({required this.imageData});
+
+  @override
+  _ImagePainterWidgetState createState() => _ImagePainterWidgetState();
+}
+
+class _ImagePainterWidgetState extends State<ImagePainterWidget> {
+  ui.Image? _image;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareImage();
+  }
+
+  Future<void> _prepareImage() async {
+    final Completer<ui.Image> completer = Completer<ui.Image>();
+    ui.decodeImageFromList(widget.imageData, (image) {
+      completer.complete(image);
+    });
+
+    _image = await completer.future;
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _image == null
+        ? Center(child: CircularProgressIndicator())
+        : CustomPaint(
+            painter: MyPainter(
+              image: _image!,
+              color: Colors.red,
+              thickness: 5.0,
+              antiAliased: true,
+            ),
+          );
+  }
 }
