@@ -76,45 +76,30 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
 
-  // static const platform = MethodChannel('menu_actions');
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   platform.setMethodCallHandler(_handleMethod);
-  // }
-
-  // Future<void> _handleMethod(MethodCall call) async {
-  //   switch (call.method) {
-  //     case 'load':
-  //       // Implement your loading logic
-  //       break;
-  //     case 'save':
-  //       // Implement your saving logic
-  //       break;
-  //     default:
-  //       throw PlatformException(
-  //         code: 'NotImplemented',
-  //         details: 'The method ${call.method} is not implemented',
-  //       );
-  //   }
-  // }
-
   void startDrawing(DragStartDetails details) {
-    // setState(() {
-    //   points.add(details.localPosition);
-    // });
+    print("startDrawing() is called!");
+    setState(() {
+      points.add(offsetToPoint(details.localPosition));
+      print(details.localPosition);
+    });
   }
 
   void continueDrawing(DragUpdateDetails details) {
-    // setState(() {
-    //   points.add(details.localPosition);
-    // });
+    print("continueDrawing is called!");
+    setState(() {
+      points.add(offsetToPoint(details.localPosition));
+      print(details.localPosition);
+    });
   }
 
   void stopDrawing() {
     setState(() {
       // Add logic if needed when stopping
     });
+  }
+
+  Point offsetToPoint(Offset offset) {
+    return Point(offset.dx, offset.dy);
   }
 
   @override
@@ -128,15 +113,27 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             flex: 7,
             child: GestureDetector(
-              onPanStart: startDrawing,
-              onPanUpdate: continueDrawing,
-              onPanEnd: (details) => stopDrawing(),
-              // child: CustomPaint(
-              //   painter: MyPainter(points, currentColor, currentThickness, antiAliased),
-              //   child: Container(
-              //     color: Colors.white,
-              //   ),
-              // ),
+              // onTap: () {
+              //   print("Screen tapped");
+              // },
+              onPanStart: (details) {
+                // ドラッグ時の処理
+                startDrawing(details);
+              },
+              onPanUpdate: (details) {
+                // ドラッグ時の処理
+                continueDrawing(details);
+              },
+              onPanEnd: (details) {
+                // ドラッグ終了時の処理
+              },
+              child: CustomPaint(
+                size: Size.infinite, // タップ可能領域を最大に
+                // painter: MyPainter(points, currentColor, currentThickness, antiAliased),
+                child: Container(
+                  color: Color(0xFFF5F5F5), // background color
+                ),
+              ),
             ),
           ),
           Expanded(
