@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
 import 'points.dart';
 import 'pixelOperation.dart';
@@ -10,17 +11,18 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
   @override
-Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Draw App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(),
-    );
+  Widget build(BuildContext context) {
+      return MaterialApp(
+        title: 'Draw App',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: MyHomePage(),
+      );
+    }
   }
-}
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -70,6 +72,29 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentShapeIndex = -1;
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
+
+  // static const platform = MethodChannel('menu_actions');
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   platform.setMethodCallHandler(_handleMethod);
+  // }
+
+  // Future<void> _handleMethod(MethodCall call) async {
+  //   switch (call.method) {
+  //     case 'load':
+  //       // Implement your loading logic
+  //       break;
+  //     case 'save':
+  //       // Implement your saving logic
+  //       break;
+  //     default:
+  //       throw PlatformException(
+  //         code: 'NotImplemented',
+  //         details: 'The method ${call.method} is not implemented',
+  //       );
+  //   }
+  // }
 
   void startDrawing(DragStartDetails details) {
     // setState(() {
@@ -177,40 +202,21 @@ class _MyHomePageState extends State<MyHomePage> {
                               });
                             },
                           ),
-                          // ----- DELETE -----
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16.0),
-                            child: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                // Add eraser functionality here
-                                setState(() {
-                                  points.clear();  // Example of erasing all
-                                });
-                              },
-                            ),
-                          ),
-                          // ----- SAVE & LOAD -----
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                child: Text("Load"),
-                                onPressed: () {
-                                  // Load functionality
-                                },
-                              ),
-                              ElevatedButton(
-                                child: Text("Save"),
-                                onPressed: () {
-                                  // Save functionality
-                                },
-                              ),
-                            ],
-                          ),
-                          // ----- ANTIALIASED -----
                           Row(
                             children: [
+                              // ----- DELETE -----
+                              Expanded(
+                                child: IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    // Add eraser functionality here
+                                    setState(() {
+                                      points.clear();  // Example of erasing all
+                                    });
+                                  },
+                                ),
+                              ),
+                              // ----- ANTIALIASED -----
                               Expanded(
                                 child: RadioListTile<bool>(
                                   title: const Text('Anti-Aliasing ON'),
@@ -233,6 +239,25 @@ class _MyHomePageState extends State<MyHomePage> {
                                       antiAliased = value!;
                                     });
                                   },
+                                ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    ElevatedButton(
+                                      child: Text("Load"),
+                                      onPressed: () {
+                                        // Load functionality
+                                      },
+                                    ),
+                                    ElevatedButton(
+                                      child: Text("Save"),
+                                      onPressed: () {
+                                        // Save functionality
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
