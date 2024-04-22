@@ -173,6 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             onPressed: (int index) {
                               setState(() {
                                 shapeType = ['Line', 'Circle', 'Polygon'][index];
+                                print(shapeType);
                               });
                             },
                           ),
