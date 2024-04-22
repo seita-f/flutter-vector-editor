@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'points.dart';
 import 'pixelOperation.dart';
+import 'shape/shape.dart';
+import 'shape/line.dart';
 
 void main() {
   runApp(MyApp());
@@ -57,7 +59,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool antiAliased = false;
   
   // Point
-  List<Point> points = [];  // Define the points list if it's missing
+  List<Point> points = List<Point>.empty(growable: true);
+  List<Shape> shapes = List<Shape>.empty(growable: true);
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
   Point previousCursorPosition = Point(0, 0);
@@ -85,30 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // Add logic if needed when stopping
     });
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-
-  //   double minButtonSize = 40.0;
-  //   double maxButtonSize = 80.0;
-  //   double screenWidth = MediaQuery.of(context).size.width;
-  //   double buttonSize = (screenWidth * 0.1).clamp(minButtonSize, maxButtonSize);
-
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text("Draw App"),
-  //     ),
-  //     body: GestureDetector(
-  //       onPanStart: startDrawing,
-  //       onPanUpdate: continueDrawing,
-  //       onPanEnd: (details) => stopDrawing(),
-  //       child: CustomPaint(
-  //         painter: MyPainter(points, currentColor, currentThickness, antiAliased),
-  //         child: Container(),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MyPainter extends CustomPainter {
-  final List<Offset> points;
+  final List<Point> points;
   final Color color;
   final double thickness;
   final bool antiAliased;
@@ -281,17 +260,17 @@ class MyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = color
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = thickness
-      ..isAntiAlias = antiAliased;
+    // Paint paint = Paint()
+    //   ..color = color
+    //   ..strokeCap = StrokeCap.round
+    //   ..strokeWidth = thickness
+    //   ..isAntiAlias = antiAliased;
 
-    for (int i = 0; i < points.length - 1; i++) {
-      if (points[i] != null && points[i + 1] != null) {
-        canvas.drawLine(points[i], points[i + 1], paint);
-      }
-    } 
+    // for (int i = 0; i < points.length - 1; i++) {
+    //   if (points[i] != null && points[i + 1] != null) {
+    //     canvas.drawLine(points[i], points[i + 1], paint);
+    //   }
+    // } 
 }
 
   @override
