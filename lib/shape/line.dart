@@ -6,8 +6,14 @@ import '../points.dart';
 import '../pixelOperation.dart';
 
 class Line extends Shape {
-  Line(List<Point> points, int thickness, Color color) : super(points, thickness, color);
 
+  Line(List<Point> points, int thickness, Color color) : super(points, thickness, color)
+  {
+    print("----- Line obj -----");
+    print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
+    print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+  }
+ 
   // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, {bool isAntiAliased = false, bool isSuperSampled = false, int ssaa = 2}) {

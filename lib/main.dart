@@ -48,11 +48,11 @@ class _MyHomePageState extends State<MyHomePage> {
   String shapeType = 'Line'; // Default shape
 
   // Properties
-  double currentThickness = 4.0;
+  double currentThickness = 4;
   Color currentColor = Colors.black;  // default
 
   // Flag for drawing
-  bool drawingLine = false;
+  bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
 
@@ -85,16 +85,30 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void continueDrawing(DragUpdateDetails details) {
-    print("continueDrawing is called!");
+    // print("continueDrawing is called!");
     setState(() {
-      points.add(offsetToPoint(details.localPosition));
-      print(details.localPosition);
+
     });
   }
 
-  void stopDrawing() {
+  void stopDrawing(DragEndDetails details) {
+    print("stopDrawing() is called!");
     setState(() {
       // Add logic if needed when stopping
+      points.add(offsetToPoint(details.localPosition));
+      print(details.localPosition);
+
+      if(drawingLine){
+        shapes.add(Line(points, currentThickness.toInt(), currentColor));
+        points.clear();
+      }
+      else if(drawingCircle){
+
+      }
+      else if(drawingPolygon){
+
+      }
+      print(shapes);
     });
   }
 
@@ -116,19 +130,11 @@ class _MyHomePageState extends State<MyHomePage> {
               // onTap: () {
               //   print("Screen tapped");
               // },
-              onPanStart: (details) {
-                // ドラッグ時の処理
-                startDrawing(details);
-              },
-              onPanUpdate: (details) {
-                // ドラッグ時の処理
-                continueDrawing(details);
-              },
-              onPanEnd: (details) {
-                // ドラッグ終了時の処理
-              },
+              onPanStart: (details) { startDrawing(details); },
+              onPanUpdate: (details) { continueDrawing(details); },
+              onPanEnd: (details) { stopDrawing(details); },
               child: CustomPaint(
-                size: Size.infinite, // タップ可能領域を最大に
+                size: Size.infinite, 
                 // painter: MyPainter(points, currentColor, currentThickness, antiAliased),
                 child: Container(
                   color: Color(0xFFF5F5F5), // background color
@@ -180,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             min: 1.0,
                             max: 10.0,
                             divisions: 9,
-                            label: currentThickness.round().toString(),
+                            label: currentThickness.round.toString(),
                             onChanged: (double value) {
                               setState(() {
                                 currentThickness = value;
@@ -198,7 +204,21 @@ class _MyHomePageState extends State<MyHomePage> {
                             onPressed: (int index) {
                               setState(() {
                                 shapeType = ['Line', 'Circle', 'Polygon'][index];
-                                print(shapeType);
+                                if(shapeType == 'Line'){ 
+                                  drawingLine = true; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = false;
+                                }
+                                if(shapeType == 'Circle'){ 
+                                  drawingLine = false; 
+                                  drawingCircle = true; 
+                                  drawingPolygon = false;
+                                }
+                                if(shapeType == 'Polygon')
+                                { drawingLine = false; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = true;
+                                }
                               });
                             },
                           ),
@@ -211,7 +231,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                   onPressed: () {
                                     // Add eraser functionality here
                                     setState(() {
-                                      points.clear();  // Example of erasing all
+                                      // points.clear();  // Example of erasing all
+                                      shapes.clear();
+                                      print("Deleted all shapes!");
                                     });
                                   },
                                 ),

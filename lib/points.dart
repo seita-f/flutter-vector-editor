@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'dart:math' as math;
-import 'dart:math'; // dart:math ライブラリをインポート
+import 'dart:math'; // dart:math 
 
 class Point {
   final double dx;
