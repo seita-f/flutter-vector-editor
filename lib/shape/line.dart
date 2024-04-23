@@ -23,40 +23,27 @@ class Line extends Shape {
   // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
-    // if (thickness != 1) {
-    //   final brush = Brush.rounded(thickness, color: outlineColor);
-    //   brushLine(size, pixels, brush);
-    // } else if (antiAlias) {
-    //   wuLine(size, pixels);
-    // } else {
-    //   ddaLine(size, pixels);
-    // }
-    DDA_line(size, pixels);
+    if (thickness == 1){
+        DDA_line(size, pixels);
+    }
+    else if(thickness > 1 && isAntiAliased){
+        
+    }
+    else if(thickness > 1 && !isAntiAliased){
+        DDA_line(size, pixels);
+        copyLine(size, pixels); // CopyLine メソッドを追加
+    }
   }
 
   void DDA_line(ui.Size size, Uint8List pixels) {
-    
-    // if (points.length == 1) {
-    //     // print("length is 1");
-    //     start_dx = points[0].dx;
-    //     start_dy = points[0].dy;
-    // } else if (points.length == 2){
-    //     end_dx = points[1].dx;
-    //     end_dy = points[1].dy;
-    // }
 
     var dx = end_dx - start_dx;
     var dy = end_dy - start_dy;
 
-    // var dy = this.points[1].dy - this.points[0].dy;
-    // var dx = this.points[1].dx - this.points[0].dx;
     var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
 
     dx = dx / steps;
     dy = dy / steps;
-
-    // var x = this.points[0].dx;
-    // var y = this.points[0].dy;
 
     var x = start_dx;
     var y = start_dy;
@@ -86,7 +73,42 @@ class Line extends Shape {
     pixels[index + 1] = color.green;
     pixels[index + 2] = color.blue;
     pixels[index + 3] = color.alpha;
-  }
+}
+
+void copyLine(ui.Size size, Uint8List pixels) {
+    var dx = end_dx - start_dx;
+    var dy = end_dy - start_dy;
+    var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
+
+    dx = dx / steps;
+    dy = dy / steps;
+
+    var x = start_dx;
+    var y = start_dy;
+
+    // より水平な線の場合
+    if (dx.abs() > dy.abs()) {
+        for (var i = 0; i <= steps; i++) {
+        for (int j = 1; j <= thickness / 2; j++) {
+            drawPixel(size, pixels, x, y + j, 1.0); // 上方向にコピー
+            drawPixel(size, pixels, x, y - j, 1.0); // 下方向にコピー
+        }
+        x += dx;
+        y += dy;
+        }
+    }
+    // より垂直な線の場合
+    else {
+        for (var i = 0; i <= steps; i++) {
+        for (int j = 1; j <= thickness / 2; j++) {
+            drawPixel(size, pixels, x + j, y, 1.0); // 右方向にコピー
+            drawPixel(size, pixels, x - j, y, 1.0); // 左方向にコピー
+        }
+        x += dx;
+        y += dy;
+        }
+    }
+}
 
 //   void draw(Uint8List pixels, {bool isAntiAliased = false, bool isSuperSampled = false, int ssaa = 2}) {
 //     print("Draw Function (LINE) is called!");
