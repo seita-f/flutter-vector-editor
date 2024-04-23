@@ -53,6 +53,8 @@ class Circle extends Shape {
     int x = 0;
     int y = radius;
 
+    print("radius: $radius");
+
     while (y >= x) {
       drawCircle(pixels, size, x, y);
       if (d < 0) {
@@ -109,10 +111,10 @@ class Circle extends Shape {
         return;
       }
 
-      pixels[index] = backgroundColor.red;
-      pixels[index + 1] = backgroundColor.green;
-      pixels[index + 2] = backgroundColor.blue;
-      pixels[index + 3] = backgroundColor.alpha;
+      pixels[index] = color.red;
+      pixels[index + 1] = color.green;
+      pixels[index + 2] = color.blue;
+      pixels[index + 3] = color.alpha;
     }
   }
 //     void drawPixel(Uint8List pixels, Size size, double i, double j, {var alpha = 1.0}) {
