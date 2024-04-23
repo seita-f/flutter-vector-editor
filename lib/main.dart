@@ -8,6 +8,7 @@ import 'points.dart';
 import 'pixelOperation.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
+import 'shape/circle.dart';
 
 void main() {
   runApp(MyApp());
@@ -104,7 +105,8 @@ class _MyHomePageState extends State<MyHomePage> {
         points.clear();
       }
       else if(drawingCircle){
-
+        shapes.add(Circle(points, currentThickness.toInt(), currentColor));
+        points.clear();
       }
       else if(drawingPolygon){
 
@@ -266,8 +268,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   drawingCircle = true; 
                                   drawingPolygon = false;
                                 }
-                                if(shapeType == 'Polygon')
-                                { drawingLine = false; 
+                                if(shapeType == 'Polygon'){
+                                  drawingLine = false; 
                                   drawingCircle = false; 
                                   drawingPolygon = true;
                                 }

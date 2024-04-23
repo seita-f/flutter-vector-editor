@@ -20,21 +20,21 @@ class Line extends Shape {
     end_dy = points[1].dy;
   }
  
-  // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
     if (thickness == 1){
         DDA_line(size, pixels);
     }
     else if(thickness > 1 && isAntiAliased){
-        
+        Wu_antiAliased_line(size, pixels);
     }
-    else if(thickness > 1 && !isAntiAliased){
+    else{
         DDA_line(size, pixels);
-        copyLine(size, pixels); // CopyLine メソッドを追加
+        copyLine(size, pixels); // CopyLine method
     }
   }
 
+  // DDA Algorithm for line drawing
   void DDA_line(ui.Size size, Uint8List pixels) {
 
     var dx = end_dx - start_dx;
@@ -55,27 +55,8 @@ class Line extends Shape {
     }
   }
 
-  void drawPixel(ui.Size size, Uint8List pixels, double x, double y, double c) {
-
-    final index = (x.floor() + y.floor() * size.width).toInt() * 4;
-    if (index < 0 ||
-        index >= pixels.length ||
-        c < 0 ||
-        c > 1 ||
-        x < 0 ||
-        x >= size.width ||
-        y < 0 ||
-        y >= size.height) {
-      return;
-    }
-
-    pixels[index] = color.red;
-    pixels[index + 1] = color.green;
-    pixels[index + 2] = color.blue;
-    pixels[index + 3] = color.alpha;
-}
-
-void copyLine(ui.Size size, Uint8List pixels) {
+  // Copy-Line algorithm for line drawing
+  void copyLine(ui.Size size, Uint8List pixels) {
     var dx = end_dx - start_dx;
     var dy = end_dy - start_dy;
     var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
@@ -108,59 +89,31 @@ void copyLine(ui.Size size, Uint8List pixels) {
         y += dy;
         }
     }
-}
+  }
 
-//   void draw(Uint8List pixels, {bool isAntiAliased = false, bool isSuperSampled = false, int ssaa = 2}) {
-//     print("Draw Function (LINE) is called!");
-//     if (isAntiAliased) {
-//       drawAntiAliased(pixels);
-//       return;
-//     }
+  // anti-aliased algorithm for d
+  void Wu_antiAliased_line(ui.Size size, Uint8List pixels) {
 
-//     int SSAA = isSuperSampled ? ssaa : 1;
-//     double x0 = (SSAA * points[0].dx);
-//     double y0 = (SSAA * points[0].dy);
-//     double x1 = (SSAA * points[1].dx);
-//     double y1 = (SSAA * points[1].dy);
 
-//     double dy = y1 - y0;
-//     double dx = x1 - x0;
+  }
 
-//     if (dx != 0 && (dy / dx).abs() < 1) {
-//       double y = y0.toDouble();
-//       double m = dy / dx;
+  void drawPixel(ui.Size size, Uint8List pixels, double x, double y, double c) {
 
-//       if (dx > 0) {
-//         for (int x = x0.toInt(); x <= x1.toInt(); ++x) {
-//           // applyBrush(pixels, x, y.round(), SSAA * thickness, color);
-//           y += m;
-//         }
-//       } else {
-//         for (int x = x0.toInt(); x >= x1.toInt(); --x) {
-//           // applyBrush(pixels, x, y.round(), SSAA * thickness, color);
-//           y -= m;
-//         }
-//       }
-//     } else if (dy != 0) {
-//       double x = x0.toDouble();
-//       double m = dx / dy;
+    final index = (x.floor() + y.floor() * size.width).toInt() * 4;
+    if (index < 0 ||
+        index >= pixels.length ||
+        c < 0 ||
+        c > 1 ||
+        x < 0 ||
+        x >= size.width ||
+        y < 0 ||
+        y >= size.height) {
+      return;
+    }
 
-//       if (dy > 0) {
-//         for (int y = y0.toInt(); y <= y1.toInt(); ++y) {
-//           // applyBrush(pixels, x.round(), y, SSAA * thickness, color);
-//           x += m;
-//         }
-//       } else {
-//         for (int y = y0.toInt(); y >= y1.toInt(); --y) {
-//           // applyBrush(pixels, x.round(), y, SSAA * thickness, color);
-//           x -= m;
-//         }
-//       }
-//     }
-//   }
-
-  void drawAntiAliased(Uint8List pixels) {
-    // Implementation of anti-aliased line drawing (not complete)
-    // This method should be implemented based on the specific graphics library used (e.g., Skia, custom bitmap manipulation)
+    pixels[index] = color.red;
+    pixels[index + 1] = color.green;
+    pixels[index + 2] = color.blue;
+    pixels[index + 3] = color.alpha;
   }
 }
