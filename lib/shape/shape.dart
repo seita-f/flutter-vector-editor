@@ -57,10 +57,5 @@ abstract class Shape {
     double normalLength = (b - a).distance;
     return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
   }
-
-  void applyBrush(Uint8List pixels, Point start, Point end, int thickness, Color color) {
-    // ここで実際のライン描画ロジックを実装します
-    // このメソッドは、Pixel操作のロジックと組み合わせて使用されることを想定しています。
-  }
 }
 

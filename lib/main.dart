@@ -50,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Properties
   double currentThickness = 4;
   Color currentColor = Colors.black;  // default
+  Color canvasColor = Color(0xFFF5F5F5);
 
   // Flag for drawing
   bool drawingLine = true; // defualt
@@ -112,12 +113,47 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  //----- Functions -----
   Point offsetToPoint(Offset offset) {
     return Point(offset.dx, offset.dy);
   }
 
+  Size getScreenSize(BuildContext context) {
+    return MediaQuery.of(context).size;  // 画面のサイズを取得
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    // screen size
+    Size size = MediaQuery.of(context).size;  
+  
+    // ----- Pixel to Image -----
+    Uint8List toBytes() {
+      final pixels = Uint8List(size.width.toInt() * size.height.toInt() * 4);
+    
+      for (var i = 0; i < pixels.length; i += 4) {
+        pixels[i] = canvasColor.red;
+        pixels[i + 1] = canvasColor.green;
+        pixels[i + 2] = canvasColor.blue;
+        pixels[i + 3] = canvasColor.alpha;
+      }
+
+      for (var shape in shapes) {
+        shape.draw(pixels, size, isAntiAliased: antiAliased);
+      }
+
+      return pixels;
+    }
+
+    Future<ui.Image> toImage() {
+      final pixels = toBytes();
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromPixels(pixels, size.width.toInt(), size.height.toInt(),
+          ui.PixelFormat.rgba8888, completer.complete);
+      return completer.future;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Draw App"),
@@ -137,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 size: Size.infinite, 
                 // painter: MyPainter(points, currentColor, currentThickness, antiAliased),
                 child: Container(
-                  color: Color(0xFFF5F5F5), // background color
+                  color: canvasColor,
                 ),
               ),
             ),
