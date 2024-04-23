@@ -12,6 +12,11 @@ abstract class Shape {
   int thickness;
   Color color;
 
+  var start_dx;
+  var start_dy;
+  var end_dx;
+  var end_dy;
+  
   Shape(this.points, this.thickness, this.color);
 
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});

@@ -13,6 +13,10 @@ class Line extends Shape {
     print("----- Line obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+    start_dx = points[0].dx;
+    start_dy = points[0].dy;
+    end_dx = points[1].dx;
+    end_dy = points[1].dy;
   }
  
   // DDA Algorithm for line drawing
@@ -30,16 +34,26 @@ class Line extends Shape {
   }
 
   void DDA_line(ui.Size size, Uint8List pixels) {
-
-    var dy = points[0].dy - points[1].dy;
-    var dx = points[0].dx - points[1].dx;
+    
+    if (points.length == 1) {
+        print("length is 1");
+    } else {
+        // Handle error or do nothing if points is empty or index is out of bounds
+        print("Attempted to access an out-of-range or empty list of points.");
+        print(points.length);
+        return;
+    }
+    var dx = end_dx - start_dx;
+    var dy = end_dy - start_dy;
+    // var dy = this.points[1].dy - this.points[0].dy;
+    // var dx = this.points[1].dx - this.points[0].dx;
     var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
 
     dx = dx / steps;
     dy = dy / steps;
 
-    var x = points[0].dx;
-    var y = points[1].dy;
+    var x = this.points[0].dx;
+    var y = this.points[0].dy;
 
     for (var i = 0; i <= steps; i++) {
       drawPixel(size, pixels, x, y, 1.0);

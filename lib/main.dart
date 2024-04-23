@@ -169,13 +169,29 @@ class _MyHomePageState extends State<MyHomePage> {
               onPanStart: (details) { startDrawing(details); },
               onPanUpdate: (details) { continueDrawing(details); },
               onPanEnd: (details) { stopDrawing(details); },
-              child: CustomPaint(
-                size: Size.infinite, 
-                // painter: MyPainter(points, currentColor, currentThickness, antiAliased),
-                child: Container(
-                  color: canvasColor,
-                ),
-              ),
+              child: Container(
+                color: canvasColor,  // キャンバスの色を設定
+                child: FutureBuilder<ui.Image>(
+                  future: toImage(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Stack(children: [
+                        RawImage(
+                          alignment: Alignment.topLeft,
+                          fit: BoxFit.none,
+                          image: snapshot.data!,
+                          width: size.width,
+                          height: size.height,
+                          filterQuality: FilterQuality.none,
+                        ),
+                        // Text(drawing.toString())
+                      ]);
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),  
+              ), 
             ),
           ),
           Expanded(
