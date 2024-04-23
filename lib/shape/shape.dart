@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../points.dart';
 import '../pixelOperation.dart';
@@ -14,7 +14,7 @@ abstract class Shape {
 
   Shape(this.points, this.thickness, this.color);
 
-  void draw(Uint8List pixels, {bool isAntiAliased = false, bool isSuperSampled = false, int ssaa = 2});
+  void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
 
   int getVertexIndexOf(Point point) {
     for (int i = 0; i < points.length; i++) {
@@ -57,4 +57,10 @@ abstract class Shape {
     double normalLength = (b - a).distance;
     return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
   }
+
+  void applyBrush(Uint8List pixels, Point start, Point end, int thickness, Color color) {
+    // ここで実際のライン描画ロジックを実装します
+    // このメソッドは、Pixel操作のロジックと組み合わせて使用されることを想定しています。
+  }
 }
+
