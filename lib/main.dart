@@ -9,6 +9,8 @@ import 'pixelOperation.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
+import 'shape/polygon.dart';
+
 
 void main() {
   runApp(MyApp());

@@ -117,29 +117,4 @@ class Circle extends Shape {
       pixels[index + 3] = color.alpha;
     }
   }
-//     void drawPixel(Uint8List pixels, Size size, double i, double j, {var alpha = 1.0}) {
-//     // xとyの位置を計算し、整数型に変換します。
-//     final x = (start_dx + i).toInt();
-//     final y = (start_dy + j).toInt();
-
-//     final width = size.width.toInt();
-//     final height = size.height.toInt();
-
-//     if (x >= 0 && x < width && y >= 0 && y < height) {
-//         final index = (x + y * width) * 4;
-
-//         if (alpha != 1.0) {
-//         pixels[index] = backgroundColor.red;
-//         pixels[index + 1] = backgroundColor.green;
-//         pixels[index + 2] = backgroundColor.blue;
-//         pixels[index + 3] = (backgroundColor.alpha * alpha).toInt();
-//         return;
-//         }
-
-//         pixels[index] = backgroundColor.red;
-//         pixels[index + 1] = backgroundColor.green;
-//         pixels[index + 2] = backgroundColor.blue;
-//         pixels[index + 3] = backgroundColor.alpha;
-//     }
-//   }
 }
