@@ -26,7 +26,7 @@ class Circle extends Shape {
     end_dx = points[1].dx;
     end_dy = points[1].dy;
 
-    this.radius = sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) ).toInt();
+    this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
     // this.startAngle = 0;
     // this.endAngle = 2 * pi;
     // this.relativeStartAngle = 0;
@@ -40,10 +40,18 @@ class Circle extends Shape {
         Midpoint_circle(size, pixels);
     }
     else{
-        print("Wu-antialiased");
+        Wu_Circle(size, pixels);
     }
   }
 
+  double customFloor(double x) {
+    if (x >= 0) {
+        return x.floorToDouble();
+    } else {
+        return x.ceilToDouble() - 1;
+    }
+  }
+  
   // DDA Algorithm for line drawing
   void Midpoint_circle(ui.Size size, Uint8List pixels) {
 
@@ -71,7 +79,7 @@ class Circle extends Shape {
     }
   }
 
-  void drawCircle(Uint8List pixels, Size size, int x, int y) {
+  void drawCircle(Uint8List pixels, ui.Size size, int x, int y) {
     drawPixel(pixels, size, x, y);
     drawPixel(pixels, size, x, -y);
     drawPixel(pixels, size, -x, y);
@@ -81,8 +89,80 @@ class Circle extends Shape {
     drawPixel(pixels, size, -y, x);
     drawPixel(pixels, size, -y, -x);
   }
+  
+  void Wu_Circle(ui.Size size, Uint8List pixels) {
+    double x = radius.toDouble();
+    double y = 0;
 
-  void drawPixel(Uint8List pixels, Size size, int i, int j,{var alpha = 1.0}) {
+    drawPixel(pixels, size, x.round(), y.round());
+    drawPixel(pixels, size, y.round(), x.round());
+    drawPixel(pixels, size, -x.round(), y.round());
+    drawPixel(pixels, size, -y.round(), -x.round());
+    while (x > y) {
+      y++;
+      x = sqrt(radius * radius - y * y).ceilToDouble();
+      var alpha = x - sqrt(radius * radius - y * y);
+      drawWuCircle(pixels, size, x, y, alpha);
+    }
+  }
+
+  void drawWuCircle(Uint8List pixels, ui.Size size, double x, double y, double alpha) {
+    final dx = x.round();
+    final dy = y.round();
+    print(1-alpha);
+    drawPixel(pixels, size, dx, dy, alpha: (1 - alpha));
+    drawPixel(pixels, size, dx - 1, dy, alpha: alpha);
+    drawPixel(pixels, size, dy, dx, alpha: (1 - alpha));
+    drawPixel(pixels, size, dy, dx - 1, alpha: alpha);
+    drawPixel(pixels, size, -dx, dy, alpha: (1 - alpha));
+    drawPixel(pixels, size, -dx + 1, dy, alpha: alpha);
+    drawPixel(pixels, size, -dy, dx, alpha: (1 - alpha));
+    drawPixel(pixels, size, -dy, dx - 1, alpha: alpha);
+    drawPixel(pixels, size, dx, -dy, alpha: (1 - alpha));
+    drawPixel(pixels, size, dx - 1, -dy, alpha: alpha);
+    drawPixel(pixels, size, dy, -dx, alpha: (1 - alpha));
+    drawPixel(pixels, size, dy, -dx + 1, alpha: alpha);
+    drawPixel(pixels, size, -dx, -dy, alpha: (1 - alpha));
+    drawPixel(pixels, size, -dx + 1, -dy, alpha: alpha);
+    drawPixel(pixels, size, -dy, -dx, alpha: (1 - alpha));
+    drawPixel(pixels, size, -dy, -dx + 1, alpha: alpha);
+  }
+
+  // alpha 0: completely transaparent (far from circle line)
+  // alpha 255:  filled (close to cirlce line)
+//   void Wu_Circle(ui.Size size, Uint8List pixels) {
+//     int xc = start_dx.toInt();
+//     int yc = start_dy.toInt();
+//     int x = 0;
+//     double d = 1.25 - radius.toDouble();
+//     int y = radius; // Declare and initialize y here
+
+//     while (x <= y) {
+//         // ここでアンチエイリアス処理を行います
+//         // double alpha = 1 - (d - floor(d));  // アルファ値を計算
+//         double alpha = 1 - (d - customFloor(d)); // アルファ値を計算
+//         print(alpha);
+//         drawPixel(pixels, size, xc + x, yc + y, alpha: alpha);
+//         drawPixel(pixels, size, xc - x, yc + y, alpha: alpha);
+//         drawPixel(pixels, size, xc + x, yc - y, alpha: alpha);
+//         drawPixel(pixels, size, xc - x, yc - y, alpha: alpha);
+//         drawPixel(pixels, size, xc + y, yc + x, alpha: alpha);
+//         drawPixel(pixels, size, xc - y, yc + x, alpha: alpha);
+//         drawPixel(pixels, size, xc + y, yc - x, alpha: alpha);
+//         drawPixel(pixels, size, xc - y, yc - x, alpha: alpha);
+
+//         x++;
+//         y = sqrt(radius * radius - x * x).toInt();
+//         if (d < 0) {
+//         d += 2 * x + 1;
+//         } else {
+//         y--;
+//         d += 2 * (x - y) + 1;
+//         }
+//     }
+//   }
+
+  void drawPixel(Uint8List pixels, ui.Size size, int i, int j,{var alpha = 1.0}) {
 
     final x = (start_dx + i).toInt();
     final y = (start_dy + j).toInt();
@@ -104,10 +184,18 @@ class Circle extends Shape {
       final index = (x + y * width) * 4;
 
       if (alpha != 1.0) {
-        pixels[index] = backgroundColor.red;
-        pixels[index + 1] = backgroundColor.green;
-        pixels[index + 2] = backgroundColor.blue;
-        pixels[index + 3] = backgroundColor.alpha;
+
+        Color pixelColor = Color.fromARGB(
+            (color.alpha * alpha).toInt(), // アルファ値を適用
+            color.red,
+            color.green,
+            color.blue
+        );
+
+        pixels[index] = pixelColor.red;
+        pixels[index + 1] = pixelColor.green;
+        pixels[index + 2] = pixelColor.blue;
+        pixels[index + 3] = pixelColor.alpha;
         return;
       }
 
