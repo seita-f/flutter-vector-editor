@@ -27,7 +27,7 @@ class Line extends Shape {
         DDA_line(size, pixels);
     }
     else if(thickness > 1 && isAntiAliased){
-        
+        Wu_anitiAliasing(size, pixels);
     }
     else if(thickness > 1 && !isAntiAliased){
         DDA_line(size, pixels);
@@ -49,118 +49,183 @@ class Line extends Shape {
     var y = start_dy;
 
     for (var i = 0; i <= steps; i++) {
-      drawPixel(size, pixels, x, y, 1.0);
-      x += dx;
-      y += dy;
+       drawPixel(size, pixels, x, y, 1.0);
+       x += dx;
+       y += dy;
     }
   }
 
-  void drawPixel(ui.Size size, Uint8List pixels, double x, double y, double c) {
+    void copyLine(ui.Size size, Uint8List pixels) {
+        var dx = end_dx - start_dx;
+        var dy = end_dy - start_dy;
+        var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
 
-    final index = (x.floor() + y.floor() * size.width).toInt() * 4;
-    if (index < 0 ||
+        dx = dx / steps;
+        dy = dy / steps;
+
+        var x = start_dx;
+        var y = start_dy;
+
+        // より水平な線の場合
+        if (dx.abs() > dy.abs()) {
+            for (var i = 0; i <= steps; i++) {
+            for (int j = 1; j <= thickness / 2; j++) {
+                drawPixel(size, pixels, x, y + j, 1.0); // 上方向にコピー
+                drawPixel(size, pixels, x, y - j, 1.0); // 下方向にコピー
+            }
+            x += dx;
+            y += dy;
+            }
+        }
+        // より垂直な線の場合
+        else {
+            for (var i = 0; i <= steps; i++) {
+            for (int j = 1; j <= thickness / 2; j++) {
+                drawPixel(size, pixels, x + j, y, 1.0); // 右方向にコピー
+                drawPixel(size, pixels, x - j, y, 1.0); // 左方向にコピー
+            }
+            x += dx;
+            y += dy;
+            }
+        }
+    }
+
+    void Wu_anitiAliasing(ui.Size size, Uint8List pixels)
+    {
+        // print("Wu_anitiAliasing is called!");
+
+        double x0 = start_dx;
+        double y0 = start_dy;
+        double x1 = end_dx;
+        double y1 = end_dy;
+
+        final steep = (y1 - y0).abs() > (x1 - x0).abs();
+        if (steep) {
+            double temp;
+            temp = x0;
+            x0 = y0;
+            y0 = temp;
+            temp = x1;
+            x1 = y1;
+            y1 = temp;
+        }
+
+        if (x0 > x1) {
+            double temp;
+            temp = x0;
+            x0 = x1;
+            x1 = temp;
+            temp = y0;
+            y0 = y1;
+            y1 = temp;
+        }
+
+        double dx = x1 - x0;
+        double dy = y1 - y0;
+        double gradient = dy / dx;
+
+        if (dx == 0.0) {
+            gradient = 1.0;
+        }
+
+        double xEnd = x0.roundToDouble();
+        double yEnd = y0 + gradient * (xEnd - x0);
+        double xGap = 1 - (x0 + 0.5).remainder(1);
+
+        double xPixel1 = xEnd;
+        double yPixel1 = yEnd.floorToDouble();
+
+        if (steep) {
+        antiAliased_drawPixel(
+            size, pixels, yPixel1, xPixel1, xGap * (yEnd - yPixel1).remainder(1));
+        antiAliased_drawPixel(size, pixels, yPixel1 + 1, xPixel1,
+            xGap * (1 - (yEnd - yPixel1).remainder(1)));
+        } else {
+        antiAliased_drawPixel(
+            size, pixels, xPixel1, yPixel1, xGap * (yEnd - yPixel1).remainder(1));
+        antiAliased_drawPixel(size, pixels, xPixel1, yPixel1 + 1,
+            xGap * (1 - (yEnd - yPixel1).remainder(1)));
+        }
+
+        double interY = yEnd + gradient;
+
+        xEnd = x1.roundToDouble();
+        yEnd = y1 + gradient * (xEnd - x1);
+        xGap = (x1 + 0.5).remainder(1);
+
+        double xPixel2 = xEnd;
+        double yPixel2 = yEnd.floorToDouble();
+
+        if (steep) {
+        antiAliased_drawPixel(
+            size, pixels, yPixel2, xPixel2, xGap * (yEnd - yPixel2).remainder(1));
+        antiAliased_drawPixel(size, pixels, yPixel2 + 1, xPixel2,
+            xGap * (1 - (yEnd - yPixel2).remainder(1)));
+        } else {
+        antiAliased_drawPixel(
+            size, pixels, xPixel2, yPixel2, xGap * (yEnd - yPixel2).remainder(1));
+        antiAliased_drawPixel(size, pixels, xPixel2, yPixel2 + 1,
+            xGap * (1 - (yEnd - yPixel2).remainder(1)));
+        }
+
+        if (steep) {
+        for (double x = xPixel1 + 1; x < xPixel2; x++) {
+            antiAliased_drawPixel(
+                size, pixels, interY.floorToDouble(), x, 1 - interY.remainder(1));
+            antiAliased_drawPixel(
+                size, pixels, interY.floorToDouble() + 1, x, interY.remainder(1));
+            interY += gradient;
+        }
+        } else {
+        for (double x = xPixel1 + 1; x < xPixel2; x++) {
+            antiAliased_drawPixel(
+                size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
+            antiAliased_drawPixel(
+                size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
+            interY += gradient;
+        }
+        }
+    }
+
+    void drawPixel(ui.Size size, Uint8List pixels, double x, double y, double c) {
+
+        final index = (x.floor() + y.floor() * size.width).toInt() * 4;
+        if (index < 0 ||
         index >= pixels.length ||
-        c < 0 ||
-        c > 1 ||
-        x < 0 ||
-        x >= size.width ||
-        y < 0 ||
-        y >= size.height) {
-      return;
+            c < 0 ||
+            c > 1 ||
+            x < 0 ||
+            x >= size.width ||
+            y < 0 ||
+            y >= size.height) {
+            return;
+        }
+
+        pixels[index] = color.red;
+        pixels[index + 1] = color.green;
+        pixels[index + 2] = color.blue;
+        pixels[index + 3] = color.alpha;
     }
 
-    pixels[index] = color.red;
-    pixels[index + 1] = color.green;
-    pixels[index + 2] = color.blue;
-    pixels[index + 3] = color.alpha;
-}
+    void antiAliased_drawPixel(Size size, Uint8List pixels, double x, double y, double c) {
 
-void copyLine(ui.Size size, Uint8List pixels) {
-    var dx = end_dx - start_dx;
-    var dy = end_dy - start_dy;
-    var steps = dy.abs() > dx.abs() ? dy.abs() : dx.abs();
-
-    dx = dx / steps;
-    dy = dy / steps;
-
-    var x = start_dx;
-    var y = start_dy;
-
-    // より水平な線の場合
-    if (dx.abs() > dy.abs()) {
-        for (var i = 0; i <= steps; i++) {
-        for (int j = 1; j <= thickness / 2; j++) {
-            drawPixel(size, pixels, x, y + j, 1.0); // 上方向にコピー
-            drawPixel(size, pixels, x, y - j, 1.0); // 下方向にコピー
-        }
-        x += dx;
-        y += dy;
+        int radius = this.thickness ~/ 2; // 半径を太さから計算
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                if (dx * dx + dy * dy <= radius * radius) { // 円形パターンの計算
+                    int nx = x.floor() + dx;
+                    int ny = y.floor() + dy;
+                    if (nx >= 0 && nx < size.width && ny >= 0 && ny < size.height) { // 範囲チェック
+                        final index = (nx + ny * size.width).toInt() * 4;
+                        if (index >= 0 && index < pixels.length - 4) {
+                            pixels[index] = (pixels[index] * (1 - c) + color.red * c).toInt();
+                            pixels[index + 1] = (pixels[index + 1] * (1 - c) + color.green * c).toInt();
+                            pixels[index + 2] = (pixels[index + 2] * (1 - c) + color.blue * c).toInt();
+                            pixels[index + 3] = (pixels[index + 3] * (1 - c) + color.alpha * c).toInt();
+                        }
+                    }
+                }    
+            }
         }
     }
-    // より垂直な線の場合
-    else {
-        for (var i = 0; i <= steps; i++) {
-        for (int j = 1; j <= thickness / 2; j++) {
-            drawPixel(size, pixels, x + j, y, 1.0); // 右方向にコピー
-            drawPixel(size, pixels, x - j, y, 1.0); // 左方向にコピー
-        }
-        x += dx;
-        y += dy;
-        }
-    }
-}
-
-//   void draw(Uint8List pixels, {bool isAntiAliased = false, bool isSuperSampled = false, int ssaa = 2}) {
-//     print("Draw Function (LINE) is called!");
-//     if (isAntiAliased) {
-//       drawAntiAliased(pixels);
-//       return;
-//     }
-
-//     int SSAA = isSuperSampled ? ssaa : 1;
-//     double x0 = (SSAA * points[0].dx);
-//     double y0 = (SSAA * points[0].dy);
-//     double x1 = (SSAA * points[1].dx);
-//     double y1 = (SSAA * points[1].dy);
-
-//     double dy = y1 - y0;
-//     double dx = x1 - x0;
-
-//     if (dx != 0 && (dy / dx).abs() < 1) {
-//       double y = y0.toDouble();
-//       double m = dy / dx;
-
-//       if (dx > 0) {
-//         for (int x = x0.toInt(); x <= x1.toInt(); ++x) {
-//           // applyBrush(pixels, x, y.round(), SSAA * thickness, color);
-//           y += m;
-//         }
-//       } else {
-//         for (int x = x0.toInt(); x >= x1.toInt(); --x) {
-//           // applyBrush(pixels, x, y.round(), SSAA * thickness, color);
-//           y -= m;
-//         }
-//       }
-//     } else if (dy != 0) {
-//       double x = x0.toDouble();
-//       double m = dx / dy;
-
-//       if (dy > 0) {
-//         for (int y = y0.toInt(); y <= y1.toInt(); ++y) {
-//           // applyBrush(pixels, x.round(), y, SSAA * thickness, color);
-//           x += m;
-//         }
-//       } else {
-//         for (int y = y0.toInt(); y >= y1.toInt(); --y) {
-//           // applyBrush(pixels, x.round(), y, SSAA * thickness, color);
-//           x -= m;
-//         }
-//       }
-//     }
-//   }
-
-  void drawAntiAliased(Uint8List pixels) {
-    // Implementation of anti-aliased line drawing (not complete)
-    // This method should be implemented based on the specific graphics library used (e.g., Skia, custom bitmap manipulation)
-  }
 }
