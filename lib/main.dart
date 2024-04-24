@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
+import 'dart:async';
+
+// files
 import 'points.dart';
 import 'pixelOperation.dart';
+import 'shape/shape.dart';
+import 'shape/line.dart';
+import 'shape/circle.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+
   @override
-Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Draw App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(),
-    );
+  Widget build(BuildContext context) {
+      return MaterialApp(
+        title: 'Draw App',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: MyHomePage(),
+      );
+    }
   }
-}
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -41,11 +49,12 @@ class _MyHomePageState extends State<MyHomePage> {
   String shapeType = 'Line'; // Default shape
 
   // Properties
-  double currentThickness = 4.0;
+  double currentThickness = 4;
   Color currentColor = Colors.black;  // default
+  Color canvasColor = Color(0xFFF5F5F5);
 
   // Flag for drawing
-  bool drawingLine = false;
+  bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
 
@@ -57,7 +66,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool antiAliased = false;
   
   // Point
-  List<Point> points = [];  // Define the points list if it's missing
+  List<Point> points = List<Point>.empty(growable: true);
+  List<Shape> shapes = List<Shape>.empty(growable: true);
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
   Point previousCursorPosition = Point(0, 0);
@@ -69,49 +79,83 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentVertexIndex = -1;
 
   void startDrawing(DragStartDetails details) {
-    // setState(() {
-    //   points.add(details.localPosition);
-    // });
-  }
-
-  void continueDrawing(DragUpdateDetails details) {
-    // setState(() {
-    //   points.add(details.localPosition);
-    // });
-  }
-
-  void stopDrawing() {
+    print("startDrawing() is called!");
     setState(() {
-      // Add logic if needed when stopping
+      points.add(offsetToPoint(details.localPosition));
+      print(details.localPosition);
     });
   }
 
-  // @override
-  // Widget build(BuildContext context) {
+  void continueDrawing(DragUpdateDetails details) {
+    // print("continueDrawing is called!");
+    setState(() {
 
-  //   double minButtonSize = 40.0;
-  //   double maxButtonSize = 80.0;
-  //   double screenWidth = MediaQuery.of(context).size.width;
-  //   double buttonSize = (screenWidth * 0.1).clamp(minButtonSize, maxButtonSize);
+    });
+  }
 
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text("Draw App"),
-  //     ),
-  //     body: GestureDetector(
-  //       onPanStart: startDrawing,
-  //       onPanUpdate: continueDrawing,
-  //       onPanEnd: (details) => stopDrawing(),
-  //       child: CustomPaint(
-  //         painter: MyPainter(points, currentColor, currentThickness, antiAliased),
-  //         child: Container(),
-  //       ),
-  //     ),
-  //   );
-  // }
+  void stopDrawing(DragEndDetails details) {
+    print("stopDrawing() is called!");
+    setState(() {
+      // Add logic if needed when stopping
+      points.add(offsetToPoint(details.localPosition));
+      print(details.localPosition);
+
+      if(drawingLine){
+        shapes.add(Line(points, currentThickness.toInt(), currentColor));
+        points.clear();
+      }
+      else if(drawingCircle){
+        shapes.add(Circle(points, currentThickness.toInt(), currentColor));
+        points.clear();
+      }
+      else if(drawingPolygon){
+
+      }
+      print(shapes);
+    });
+  }
+
+  //----- Functions -----
+  Point offsetToPoint(Offset offset) {
+    return Point(offset.dx, offset.dy);
+  }
+
+  Size getScreenSize(BuildContext context) {
+    return MediaQuery.of(context).size;  // 画面のサイズを取得
+  }
 
   @override
   Widget build(BuildContext context) {
+
+    // screen size
+    Size size = MediaQuery.of(context).size;  
+  
+    // ----- Pixel to Image -----
+    Uint8List toBytes() {
+      final pixels = Uint8List(size.width.toInt() * size.height.toInt() * 4);
+    
+      for (var i = 0; i < pixels.length; i += 4) {
+        pixels[i] = canvasColor.red;
+        pixels[i + 1] = canvasColor.green;
+        pixels[i + 2] = canvasColor.blue;
+        pixels[i + 3] = canvasColor.alpha;
+      }
+
+      for (var shape in shapes) {
+        shape.draw(pixels, size, isAntiAliased: antiAliased);
+      }
+
+      return pixels;
+    }
+
+    Future<ui.Image> toImage() {
+      final pixels = toBytes();
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromPixels(pixels, size.width.toInt(), size.height.toInt(),
+          ui.PixelFormat.rgba8888, completer.complete);
+      return completer.future;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Draw App"),
@@ -121,15 +165,35 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             flex: 7,
             child: GestureDetector(
-              onPanStart: startDrawing,
-              onPanUpdate: continueDrawing,
-              onPanEnd: (details) => stopDrawing(),
-              // child: CustomPaint(
-              //   painter: MyPainter(points, currentColor, currentThickness, antiAliased),
-              //   child: Container(
-              //     color: Colors.white,
-              //   ),
-              // ),
+              // onTap: () {
+              //   print("Screen tapped");
+              // },
+              onPanStart: (details) { startDrawing(details); },
+              onPanUpdate: (details) { continueDrawing(details); },
+              onPanEnd: (details) { stopDrawing(details); },
+              child: Container(
+                color: canvasColor,  // キャンバスの色を設定
+                child: FutureBuilder<ui.Image>(
+                  future: toImage(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Stack(children: [
+                        RawImage(
+                          alignment: Alignment.topLeft,
+                          fit: BoxFit.none,
+                          image: snapshot.data!,
+                          width: size.width,
+                          height: size.height,
+                          filterQuality: FilterQuality.none,
+                        ),
+                        // Text(drawing.toString())
+                      ]);
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),  
+              ), 
             ),
           ),
           Expanded(
@@ -176,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             min: 1.0,
                             max: 10.0,
                             divisions: 9,
-                            label: currentThickness.round().toString(),
+                            label: currentThickness.round.toString(),
                             onChanged: (double value) {
                               setState(() {
                                 currentThickness = value;
@@ -194,43 +258,41 @@ class _MyHomePageState extends State<MyHomePage> {
                             onPressed: (int index) {
                               setState(() {
                                 shapeType = ['Line', 'Circle', 'Polygon'][index];
+                                if(shapeType == 'Line'){ 
+                                  drawingLine = true; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = false;
+                                }
+                                if(shapeType == 'Circle'){ 
+                                  drawingLine = false; 
+                                  drawingCircle = true; 
+                                  drawingPolygon = false;
+                                }
+                                if(shapeType == 'Polygon')
+                                { drawingLine = false; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = true;
+                                }
                               });
                             },
                           ),
-                          // ----- DELETE -----
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16.0),
-                            child: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                // Add eraser functionality here
-                                setState(() {
-                                  points.clear();  // Example of erasing all
-                                });
-                              },
-                            ),
-                          ),
-                          // ----- SAVE & LOAD -----
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                child: Text("Load"),
-                                onPressed: () {
-                                  // Load functionality
-                                },
-                              ),
-                              ElevatedButton(
-                                child: Text("Save"),
-                                onPressed: () {
-                                  // Save functionality
-                                },
-                              ),
-                            ],
-                          ),
-                          // ----- ANTIALIASED -----
                           Row(
                             children: [
+                              // ----- DELETE -----
+                              Expanded(
+                                child: IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    // Add eraser functionality here
+                                    setState(() {
+                                      // points.clear();  // Example of erasing all
+                                      shapes.clear();
+                                      print("Deleted all shapes!");
+                                    });
+                                  },
+                                ),
+                              ),
+                              // ----- ANTIALIASED -----
                               Expanded(
                                 child: RadioListTile<bool>(
                                   title: const Text('Anti-Aliasing ON'),
@@ -255,6 +317,25 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                 ),
                               ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    ElevatedButton(
+                                      child: Text("Load"),
+                                      onPressed: () {
+                                        // Load functionality
+                                      },
+                                    ),
+                                    ElevatedButton(
+                                      child: Text("Save"),
+                                      onPressed: () {
+                                        // Save functionality
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -269,31 +350,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-}
-
-class MyPainter extends CustomPainter {
-  final List<Offset> points;
-  final Color color;
-  final double thickness;
-  final bool antiAliased;
-
-  MyPainter(this.points, this.color, this.thickness, this.antiAliased);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = color
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = thickness
-      ..isAntiAlias = antiAliased;
-
-    for (int i = 0; i < points.length - 1; i++) {
-      if (points[i] != null && points[i + 1] != null) {
-        canvas.drawLine(points[i], points[i + 1], paint);
-      }
-    } 
-}
-
-  @override
-  bool shouldRepaint(MyPainter oldDelegate) => true;
 }
