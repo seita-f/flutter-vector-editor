@@ -60,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
+  bool shape_edit = false;
 
   // Flag for editing
   bool movingVertex = false;
@@ -315,7 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // ----- SHAPE SELECT -----
                           ToggleButtons(
                             children: <Widget>[
-                              Icon(Icons.line_weight),
+                              Icon(Icons.line_weight), // Line icon
                               Icon(Icons.radio_button_unchecked), // Circle icon
                               Icon(Icons.change_history), // Triangle icon
                             ],
@@ -327,22 +328,43 @@ class _MyHomePageState extends State<MyHomePage> {
                                   drawingLine = true; 
                                   drawingCircle = false; 
                                   drawingPolygon = false;
+                                  shape_edit = false;
                                 }
                                 if(shapeType == 'Circle'){ 
                                   drawingLine = false; 
                                   drawingCircle = true; 
                                   drawingPolygon = false;
+                                  shape_edit = false;
                                 }
                                 if(shapeType == 'Polygon')
                                 { drawingLine = false; 
                                   drawingCircle = false; 
                                   drawingPolygon = true;
+                                  shape_edit = false;
                                 }
                               });
                             },
                           ),
                           Row(
                             children: [
+                              // ------ Edit button -----
+                              Expanded(
+                                child: IconButton(
+                                  icon: Icon(Icons.edit),
+                                  color: shape_edit ? Colors.purple : Colors.black, 
+                                  onPressed: () {
+                                    // Add eraser functionality here
+                                    setState(() {
+                                      shapeType = ''; // shapeType を空にリセットする
+                                      shape_edit = true; 
+                                      drawingLine = false; 
+                                      drawingCircle = false; 
+                                      drawingPolygon = false;
+                                      print("shape_edit clicked! $shape_edit");
+                                    });
+                                  },
+                                ),
+                              ),
                               // ----- DELETE -----
                               Expanded(
                                 child: IconButton(
@@ -389,16 +411,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ElevatedButton(
                                       child: Text("Load"),
                                       onPressed: () {
-                                        // Load functionality
-                                        // loadShapes();
                                         loadFile();
                                       },
                                     ),
                                     ElevatedButton(
                                       child: Text("Save"),
                                       onPressed: () {
-                                        // Save functionality
-                                        // saveShapes();
                                         saveFile();
                                       },
                                     ),

@@ -8,6 +8,8 @@ import 'line.dart';
 import 'circle.dart';
 
 abstract class Shape {
+
+  // properties
   static const int grabDistance = 10;
   final List<Point> points;
   int thickness;
@@ -17,11 +19,32 @@ abstract class Shape {
   var start_dy;
   var end_dx;
   var end_dy;
-
+  
+  //----- override methods ------
   Shape(this.points, this.thickness, this.color);
 
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
+  bool contains(Point points) => false; // default
 
+  static Shape? fromJson(Map<String, dynamic> json) {
+    String type = json['type'];
+    switch (type) {
+      case 'line':
+        return Line.fromJson(json);
+      case 'circle':
+        return Circle.fromJson(json);
+      default:
+        return null;  // 未知のタイプの場合はnullを返すか、例外を投げる
+    }
+  }
+
+  Map<String, dynamic> toJson();
+
+  // Constructor
+  Shape(this.points, this.thickness, this.color);
+
+
+  // ----- Edit graph ------
   static Shape? fromJson(Map<String, dynamic> json) {
     String type = json['type'];
     switch (type) {
@@ -77,5 +100,6 @@ abstract class Shape {
     double normalLength = (b - a).distance;
     return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
   }
+
 }
 

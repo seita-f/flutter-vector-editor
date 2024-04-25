@@ -170,6 +170,14 @@ class Circle extends Shape {
     }
   }
 
+  //------ Edit graph ------
+  @override
+  bool contains(Point touchedPoints) {
+    Point start = Point(start_dx, start_dy);
+    return (start - touchedPoints).distance < radius;
+  }
+
+  //------ File Manager ------
   @override
   static Shape? fromJson(Map<String, dynamic> json) {
     if (json['type'] == 'circle') {

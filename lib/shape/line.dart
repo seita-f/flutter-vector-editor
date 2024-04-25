@@ -229,6 +229,19 @@ class Line extends Shape {
         }
     }
 
+    //------- Edit graph -------
+    @override
+    bool contains(Point touchedPoints) {
+        Point start = Point(start_dx, start_dy);
+        Point end = Point(end_dx, end_dy);
+        //   true if point is within 5 pixels of the line
+        final distance = (end-start).distance;
+        final distance1 = (touchedPoints - start).distance;
+        final distance2 = (touchedPoints - end).distance;
+        return (distance1 + distance2 - distance).abs() < 5;
+    }
+
+    //----- File Manger -----
     @override
     static Shape? fromJson(Map<String, dynamic> json) {
         if (json['type'] == 'line') {
