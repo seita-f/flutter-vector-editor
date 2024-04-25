@@ -14,23 +14,19 @@ class Circle extends Shape {
   double endAngle = 0;
   double relativeStartAngle = 0;
   bool full = true;
-
+  
   Circle(List<Point> points, int thickness, Color color) : super(points, thickness, color)
   {
     print("----- Circle obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
 
-    start_dx = points[0].dx;
-    start_dy = points[0].dy;
-    end_dx = points[1].dx;
-    end_dy = points[1].dy;
+    this.start_dx = points[0].dx;
+    this.start_dy = points[0].dy;
+    this.end_dx = points[1].dx;
+    this.end_dy = points[1].dy;
 
     this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
-    // this.startAngle = 0;
-    // this.endAngle = 2 * pi;
-    // this.relativeStartAngle = 0;
-    // this.full = true;
   }
  
   @override
