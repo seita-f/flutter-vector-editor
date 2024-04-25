@@ -13,11 +13,13 @@ abstract class Shape {
   final List<Point> points;
   int thickness;
   Color color;
+  int id;
 
   var start_dx;
   var start_dy;
   var end_dx;
   var end_dy;
+ 
   
   //----- override methods ------
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
@@ -40,7 +42,7 @@ abstract class Shape {
   String toString();
 
   //----- Constructor -----
-  Shape(this.points, this.thickness, this.color);
+  Shape(this.points, this.thickness, this.color, this.id);
 
   // ----- Edit graph ------
   int getVertexIndexOf(Point point) {
@@ -50,6 +52,10 @@ abstract class Shape {
       }
     }
     return -1;
+  }
+
+  int getId(){
+    return this.id;
   }
 
   void moveVertex(int vertexIndex, Point offSet) {
@@ -84,8 +90,5 @@ abstract class Shape {
     double normalLength = (b - a).distance;
     return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
   }
-
-  // File Manager
-
 }
 

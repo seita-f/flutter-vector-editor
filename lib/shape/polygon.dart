@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 class Polygon extends Shape {
 
-  Polygon(List<Point> points, int thickness, Color color) : super(points, thickness, color)
+  Polygon(List<Point> points, int thickness, Color color) : super(points, thickness, color, id)
   {
     print("----- Polygon obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");

@@ -54,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double currentThickness = 4;
   Color currentColor = Colors.black;  // default
   Color canvasColor = Color(0xFFF5F5F5);
+  int id = 0;
 
   // Flag for drawing
   bool drawingLine = true; // defualt
@@ -65,11 +66,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shape_edit = false;
   bool contain = false;
   bool shape_isSelected = false;
-
   bool movingVertex = false;
-  bool movingEdge = false;
-  bool movingShape = false;
-  bool modifyingShape = false;
+
+
+  // bool movingEdge = false;
+  // bool movingShape = false;
+  // bool modifyingShape = false;
   
   Shape? selectedShape = null;
 
@@ -81,7 +83,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Point previousCursorPosition = Point(0, 0);
   Point currentCursorPosition = Point(0, 0);
 
-  
   // Index
   int currentShapeIndex = -1;
   int currentEdgeIndex = -1;
@@ -89,9 +90,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
+
     setState(() {
-      points.add(offsetToPoint(details.localPosition));
-      print(details.localPosition);
+
+      if(!shape_isSelected){
+        points.add(offsetToPoint(details.localPosition));
+        print("${details.localPosition} \n");
+      }
+      else{
+        Point temp = Point(details.localPosition.dx, details.localPosition.dy);
+        if (selectedShape != null) {
+            if (selectedShape?.contains(temp) == true) {
+                // selectedShapeがtempを含むかチェック
+                movingVertex = true;
+                print(selectedShape?.getId());
+            }
+        }
+      }
     });
   }
 
@@ -105,22 +120,34 @@ class _MyHomePageState extends State<MyHomePage> {
   void stopDrawing(DragEndDetails details) {
     print("stopDrawing() is called!");
     setState(() {
-      // Add logic if needed when stopping
-      points.add(offsetToPoint(details.localPosition));
-      print(details.localPosition);
+      
+      if(!shape_isSelected){
+        points.add(offsetToPoint(details.localPosition));
+        print(details.localPosition);
 
-      if(drawingLine){
-        shapes.add(Line(points, currentThickness.toInt(), currentColor));
-        points.clear();
-      }
-      else if(drawingCircle){
-        shapes.add(Circle(points, currentThickness.toInt(), currentColor));
-        points.clear();
-      }
-      else if(drawingPolygon){
+        if(drawingLine){
+          shapes.add(Line(points, currentThickness.toInt(), currentColor, id));
+          id += 1;
+          points.clear();
+        }
+        else if(drawingCircle){
+          shapes.add(Circle(points, currentThickness.toInt(), currentColor, id));
+          id += 1;
+          points.clear();
+        }
+        else if(drawingPolygon){
 
+        }
+        print(shapes);
       }
-      print(shapes);
+      else{
+        if(movingVertex == true){
+          selectedShape?.end_dx = details.localPosition.dx;
+          selectedShape?.end_dy = details.localPosition.dy;
+
+          print(selectedShape);
+        }
+      }
     });
   }
 
@@ -136,7 +163,6 @@ class _MyHomePageState extends State<MyHomePage> {
           selectedShape = shape;
           shape_isSelected = true; // update the flag
           print(selectedShape);
-
         }
       }
   }
@@ -271,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           height: size.height,
                           filterQuality: FilterQuality.none,
                         ),
-                        // Text(drawing.toString())
                       ]);
                     } else {
                       return const SizedBox();
@@ -393,6 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     setState(() {
                                       // points.clear();  // Example of erasing all
                                       shapes.clear();
+                                      id = 0;
                                       print("Deleted all shapes!");
                                     });
                                   },

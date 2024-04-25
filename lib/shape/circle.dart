@@ -14,7 +14,7 @@ class Circle extends Shape {
   double relativeStartAngle = 0;
   bool full = true;
 
-  Circle(List<Point> points, int thickness, Color color) : super(points, thickness, color)
+  Circle(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
   {
     print("----- Circle obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
@@ -24,7 +24,7 @@ class Circle extends Shape {
     start_dy = points[0].dy;
     end_dx = points[1].dx;
     end_dy = points[1].dy;
-
+    id = id;
     this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
     // this.startAngle = 0;
     // this.endAngle = 2 * pi;
@@ -191,7 +191,8 @@ class Circle extends Shape {
         ];
         int thickness = json['thickness'];
         Color color = Color(json['color']);
-        return Circle(points, thickness, color);
+        int id = json['id'];
+        return Circle(points, thickness, color, id);
     }
   }
 
@@ -203,13 +204,14 @@ class Circle extends Shape {
       'end': {'dx': end_dx, 'dy': end_dy},
       'thickness': thickness,
       'color': color.value,
+      'id': id,
       };
   }
 
   @override
   String toString() {
-    return "Circle Object: start (${this.start_dx}, ${this.start_dy}), radius "
+    return "<${this.id}> Circle Object: start (${this.start_dx}, ${this.start_dy}), radius "
           "${this.radius}, "
-          "thickness ${this.thickness}, color ${this.color}";
+          "thickness ${this.thickness}, color ${this.color} \n";
   }
 }
