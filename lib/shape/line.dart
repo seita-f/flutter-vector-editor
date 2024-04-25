@@ -263,7 +263,6 @@ class Line extends Shape {
     Map<String, dynamic> toJson() {
         // print("start: $start_dx, $end_dx");
         // print("end  : $end_dx,   $end_dy");
- 
         return {
         'type': 'line',
         'start': {'dx': start_dx, 'dy': start_dy},

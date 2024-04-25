@@ -68,7 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shape_isSelected = false;
   bool movingVertex = false;
 
-
   // bool movingEdge = false;
   // bool movingShape = false;
   // bool modifyingShape = false;
@@ -103,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if (selectedShape?.contains(temp) == true) {
                 // selectedShapeがtempを含むかチェック
                 movingVertex = true;
-                print(selectedShape?.getId());
+                print("moving vertex is true\n");
             }
         }
       }
@@ -144,8 +143,17 @@ class _MyHomePageState extends State<MyHomePage> {
         if(movingVertex == true){
           selectedShape?.end_dx = details.localPosition.dx;
           selectedShape?.end_dy = details.localPosition.dy;
+          selectedShape?.color = currentColor;
+          selectedShape?.thickness = currentThickness.toInt();
 
-          print(selectedShape);
+          for (var shape in shapes) {
+            if (selectedShape?.getId() == shape.getId()) {
+              if (selectedShape != null) {
+                shape = selectedShape!;
+              }               
+            }
+          }
+          shape_isSelected = false;
         }
       }
     });

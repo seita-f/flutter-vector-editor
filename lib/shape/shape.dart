@@ -57,38 +57,5 @@ abstract class Shape {
   int getId(){
     return this.id;
   }
-
-  void moveVertex(int vertexIndex, Point offSet) {
-    points[vertexIndex] = points[vertexIndex] + offSet;
-  }
-
-  int getEdgeIndexOf(Point point) {
-    for (int i = 0; i < points.length - 1; i++) {
-      if (_distanceFromLine(point, points[i], points[i + 1]) < thickness + grabDistance) {
-        return i;
-      }
-    }
-    if (_distanceFromLine(point, points.last, points.first) < thickness + grabDistance) {
-      return points.length - 1;
-    }
-    return -1;
-  }
-
-  void moveEdge(int edgeIndex, Point offSet) {
-    points[edgeIndex] = points[edgeIndex] + offSet;
-    int nextIndex = edgeIndex == points.length - 1 ? 0 : edgeIndex + 1;
-    points[nextIndex] = points[nextIndex] + offSet;
-  }
-
-  void moveShape(Point offset) {
-    for (int i = 0; i < points.length; i++) {
-      points[i] = points[i] + offset;
-    }
-  }
-
-  double _distanceFromLine(Point point, Point a, Point b) {
-    double normalLength = (b - a).distance;
-    return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
-  }
 }
 
