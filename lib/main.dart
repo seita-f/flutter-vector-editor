@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
 import 'dart:async';
+import 'package:file_picker/file_picker.dart';  // FilePicker
+import 'dart:io';
 
 // files
 import 'points.dart';
@@ -9,6 +11,7 @@ import 'pixelOperation.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
+import 'fileManager.dart';
 
 void main() {
   runApp(MyApp());
@@ -78,6 +81,10 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
 
+  // File manager
+  String? selectedDirectory;
+  TextEditingController fileNameController = TextEditingController();
+
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
     setState(() {
@@ -115,6 +122,64 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  //----- File Manager -----
+  void saveFile() async {
+    String? directoryPath = await FilePicker.platform.getDirectoryPath();
+
+    if (directoryPath == null) return; // Exit if no directory selected
+
+    TextEditingController fileNameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter File Name'),
+          content: TextField(
+            controller: fileNameController,
+            decoration: InputDecoration(hintText: "File name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () {
+                String fileName = fileNameController.text;
+                if (fileName.isEmpty) {
+                  print("No file name entered.");
+                  Navigator.of(context).pop();
+                  return;
+                }
+                String fullPath = '$directoryPath/$fileName';
+                Navigator.of(context).pop();
+                FileManager.saveShapes(shapes, fullPath).then((file) {
+                  if (file != null) {
+                    print("File saved to $fullPath");
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void loadFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result == null) return; // Exit if no file picked
+
+    String? filePath = result.files.single.path;
+    if (filePath == null) {
+      print("No file selected.");
+      return;
+    }
+    shapes = await FileManager.loadShapes(filePath);
+    setState(() {});
+  }
+
   //----- Functions -----
   Point offsetToPoint(Offset offset) {
     return Point(offset.dx, offset.dy);
@@ -123,6 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Size getScreenSize(BuildContext context) {
     return MediaQuery.of(context).size;  // 画面のサイズを取得
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +252,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           height: size.height,
                           filterQuality: FilterQuality.none,
                         ),
-                        // Text(drawing.toString())
                       ]);
                     } else {
                       return const SizedBox();
@@ -325,12 +390,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                       child: Text("Load"),
                                       onPressed: () {
                                         // Load functionality
+                                        // loadShapes();
+                                        loadFile();
                                       },
                                     ),
                                     ElevatedButton(
                                       child: Text("Save"),
                                       onPressed: () {
                                         // Save functionality
+                                        // saveShapes();
+                                        saveFile();
                                       },
                                     ),
                                   ],
