@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../points.dart';
-import '../pixelOperation.dart';
 import 'dart:math' as math;
 import 'line.dart';
 import 'circle.dart';
@@ -38,7 +37,9 @@ abstract class Shape {
 
   Map<String, dynamic> toJson();
 
-  // Constructor
+  String toString();
+
+  //----- Constructor -----
   Shape(this.points, this.thickness, this.color);
 
   // ----- Edit graph ------
