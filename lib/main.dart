@@ -67,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool contain = false;
   bool shape_isSelected = false;
   bool movingVertex = false;
+  bool movingLocation = false;
 
   // bool movingEdge = false;
   // bool movingShape = false;
@@ -98,11 +99,17 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else{
         Point temp = Point(details.localPosition.dx, details.localPosition.dy);
+
         if (selectedShape != null) {
-            if (selectedShape?.contains(temp) == true) {
+            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == false)) {
                 // selectedShapeがtempを含むかチェック
                 movingVertex = true;
                 print("moving vertex is true\n");
+            }
+            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == true)) {
+                // selectedShapeがtempを含むかチェック
+                movingLocation = true;
+                print("moving location is true\n");
             }
         }
       }
@@ -120,6 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print("stopDrawing() is called!");
     setState(() {
       
+      print("shape_isSelected $shape_isSelected \n");
       if(!shape_isSelected){
         points.add(offsetToPoint(details.localPosition));
         print(details.localPosition);
@@ -140,21 +148,39 @@ class _MyHomePageState extends State<MyHomePage> {
         print(shapes);
       }
       else{
-        if(movingVertex == true){
-          selectedShape?.end_dx = details.localPosition.dx;
-          selectedShape?.end_dy = details.localPosition.dy;
-          selectedShape?.color = currentColor;
-          selectedShape?.thickness = currentThickness.toInt();
+        if(movingVertex == true){ // moving end point
+            
+            selectedShape?.end_dx = details.localPosition.dx;
+            selectedShape?.end_dy = details.localPosition.dy;
+            selectedShape?.color = currentColor;
+            selectedShape?.thickness = currentThickness.toInt();
+            print("moving end-point!! \n");
 
-          for (var shape in shapes) {
-            if (selectedShape?.getId() == shape.getId()) {
-              if (selectedShape != null) {
-                shape = selectedShape!;
-              }               
+            for (var shape in shapes) {
+              if (selectedShape?.getId() == shape.getId()) {
+                if (selectedShape != null) {
+                  shape = selectedShape!;
+                }               
+              }
             }
-          }
-          shape_isSelected = false;
         }
+        if(movingLocation == true){ // moving stat point
+
+            selectedShape?.start_dx = details.localPosition.dx;
+            selectedShape?.start_dy = details.localPosition.dy;
+            selectedShape?.color = currentColor;
+            selectedShape?.thickness = currentThickness.toInt();
+            print("moving start-point!! \n");
+
+            for (var shape in shapes) {
+              if (selectedShape?.getId() == shape.getId()) {
+                if (selectedShape != null) {
+                  shape = selectedShape!;
+                }               
+              }
+            }   
+        }
+        shape_isSelected = false;
       }
     });
   }

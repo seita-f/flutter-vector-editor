@@ -24,6 +24,7 @@ abstract class Shape {
   //----- override methods ------
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
   bool contains(Point points) => false; // default
+  bool isStartPoint(Point tappedPoint) => false;  // for circle 
 
   static Shape? fromJson(Map<String, dynamic> json) {
     String type = json['type'];

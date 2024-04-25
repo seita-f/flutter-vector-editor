@@ -34,6 +34,9 @@ class Circle extends Shape {
  
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
+    
+    // update for editing by user
+    this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
 
     if(!isAntiAliased){
         Midpoint_circle(size, pixels);
@@ -175,10 +178,20 @@ class Circle extends Shape {
 
   //------ Edit graph ------
   @override
-  bool contains(Point touchedPoints) {
-    Point start = Point(start_dx, start_dy);
-    return (start - touchedPoints).distance < radius;
+  bool contains(Point touchedPoint) {
+    Point temp = Point(this.start_dx, this.start_dy);
+    return (temp - touchedPoint).distance < radius;
   }
+  // bool contains(Point touchedPoints) {
+  //     Point start = Point(start_dx, start_dy);
+  //     Point end = Point(end_dx, end_dy);
+  //     //   true if point is within 10 pixels of the line
+  //     final distance = (end-start).distance;
+  //     final distance1 = (touchedPoints - start).distance;
+  //     final distance2 = (touchedPoints - end).distance;
+  //     return (distance1 + distance2 - distance).abs() < 10;
+  // }
+
 
   //------ File Manager ------
   @override
@@ -194,6 +207,12 @@ class Circle extends Shape {
         int id = json['id'];
         return Circle(points, thickness, color, id);
     }
+  }
+
+  bool isStartPoint(Point tappedPoint){
+    final dist_to_start = (tappedPoint - this.points[0]).distance;
+    final dist_to_end = (tappedPoint - this.points[1]).distance;
+    return dist_to_start < dist_to_end;  // true => moving circle by tapping starting point
   }
 
   @override
