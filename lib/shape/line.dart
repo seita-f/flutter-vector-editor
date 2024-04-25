@@ -14,10 +14,10 @@ class Line extends Shape {
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
 
-    start_dx = points[0].dx;
-    start_dy = points[0].dy;
-    end_dx = points[1].dx;
-    end_dy = points[1].dy;
+    this.start_dx = points[0].dx;
+    this.start_dy = points[0].dy;
+    this.end_dx = points[1].dx;
+    this.end_dy = points[1].dy;
   }
  
   // DDA Algorithm for line drawing
@@ -227,5 +227,35 @@ class Line extends Shape {
                 }    
             }
         }
+    }
+
+    @override
+    static Shape? fromJson(Map<String, dynamic> json) {
+        if (json['type'] == 'line') {
+            List<Point> points = [
+                Point(json['start']['dx'], json['start']['dy']),
+                Point(json['end']['dx'], json['end']['dy']),
+            ];
+            int thickness = json['thickness'];
+            Color color = Color(json['color']);
+
+            // Fix: Pass the required positional arguments directly
+            return Line(points, thickness, color);
+        }
+        return null;
+    }
+
+    @override
+    Map<String, dynamic> toJson() {
+        // print("start: $start_dx, $end_dx");
+        // print("end  : $end_dx,   $end_dy");
+ 
+        return {
+        'type': 'line',
+        'start': {'dx': start_dx, 'dy': start_dy},
+        'end': {'dx': end_dx, 'dy': end_dy},
+        'thickness': thickness,
+        'color': color.value,
+        };
     }
 }

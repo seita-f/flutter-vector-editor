@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import '../points.dart';
 import '../pixelOperation.dart';
 import 'dart:math' as math;
-
+import 'line.dart';
+import 'circle.dart';
 
 abstract class Shape {
   static const int grabDistance = 10;
@@ -16,10 +17,24 @@ abstract class Shape {
   var start_dy;
   var end_dx;
   var end_dy;
-  
+
   Shape(this.points, this.thickness, this.color);
 
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
+
+  static Shape? fromJson(Map<String, dynamic> json) {
+    String type = json['type'];
+    switch (type) {
+      case 'line':
+        return Line.fromJson(json);
+      case 'circle':
+        return Circle.fromJson(json);
+      default:
+        return null;  // 未知のタイプの場合はnullを返すか、例外を投げる
+    }
+  }
+
+  Map<String, dynamic> toJson();
 
   int getVertexIndexOf(Point point) {
     for (int i = 0; i < points.length; i++) {
