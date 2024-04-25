@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'shape.dart';
 import '../points.dart';
-import '../pixelOperation.dart';
 import 'package:flutter/material.dart';
 
 class Polygon extends Shape {

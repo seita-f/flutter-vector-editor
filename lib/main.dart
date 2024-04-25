@@ -7,7 +7,6 @@ import 'dart:io';
 
 // files
 import 'points.dart';
-import 'pixelOperation.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
@@ -60,15 +59,20 @@ class _MyHomePageState extends State<MyHomePage> {
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
-  bool shape_edit = false;
-
+  bool antiAliased = false;
+ 
   // Flag for editing
+  bool shape_edit = false;
+  bool contain = false;
+  bool shape_isSelected = false;
+
   bool movingVertex = false;
   bool movingEdge = false;
   bool movingShape = false;
   bool modifyingShape = false;
-  bool antiAliased = false;
   
+  Shape? selectedShape = null;
+
   // Point
   List<Point> points = List<Point>.empty(growable: true);
   List<Shape> shapes = List<Shape>.empty(growable: true);
@@ -77,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Point previousCursorPosition = Point(0, 0);
   Point currentCursorPosition = Point(0, 0);
 
+  
   // Index
   int currentShapeIndex = -1;
   int currentEdgeIndex = -1;
@@ -121,6 +126,23 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       print(shapes);
     });
+  }
+
+  void isShape(TapUpDetails details)
+  {
+      // detect if there is a shpe at the tapped location
+      print("TapUp() called! It is an edit mode");
+      // print(details.localPosition);
+      Point tappedPoint = Point(details.localPosition.dx, details.localPosition.dy);
+
+      for (var shape in shapes) {
+        if(shape.contains(tappedPoint) == true){
+          selectedShape = shape;
+          shape_isSelected = true; // update the flag
+          print(selectedShape);
+
+        }
+      }
   }
 
   //----- File Manager -----
@@ -232,9 +254,10 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             flex: 7,
             child: GestureDetector(
-              // onTap: () {
-              //   print("Screen tapped");
-              // },
+              onTapUp: (details) {
+                print("Screen tapped");
+                isShape(details);
+              },
               onPanStart: (details) { startDrawing(details); },
               onPanUpdate: (details) { continueDrawing(details); },
               onPanEnd: (details) { stopDrawing(details); },

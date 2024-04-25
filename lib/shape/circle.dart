@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'shape.dart';
 import '../points.dart';
-import '../pixelOperation.dart';
 import 'package:flutter/material.dart';
 
 class Circle extends Shape {
@@ -201,5 +200,12 @@ class Circle extends Shape {
       'thickness': thickness,
       'color': color.value,
       };
+  }
+
+  @override
+  String toString() {
+    return "Circle Object: start (${this.start_dx}, ${this.start_dy}), radius "
+          "${this.radius}, "
+          "thickness ${this.thickness}, color ${this.color}";
   }
 }
