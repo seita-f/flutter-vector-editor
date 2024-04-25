@@ -68,10 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shape_isSelected = false;
   bool movingVertex = false;
   bool movingLocation = false;
-
-  // bool movingEdge = false;
-  // bool movingShape = false;
-  // bool modifyingShape = false;
   
   Shape? selectedShape = null;
 
@@ -143,9 +139,9 @@ class _MyHomePageState extends State<MyHomePage> {
           points.clear();
         }
         else if(drawingPolygon){
-
+          // drawing polygon
         }
-        print(shapes);
+        print("$shapes \n");
       }
       else{
         if(movingVertex == true){ // moving end point
@@ -165,24 +161,40 @@ class _MyHomePageState extends State<MyHomePage> {
             }
         }
         if(movingLocation == true){ // moving stat point
-
-            selectedShape?.start_dx = details.localPosition.dx;
-            selectedShape?.start_dy = details.localPosition.dy;
-            selectedShape?.color = currentColor;
-            selectedShape?.thickness = currentThickness.toInt();
-            print("moving start-point!! \n");
-
-            for (var shape in shapes) {
-              if (selectedShape?.getId() == shape.getId()) {
-                if (selectedShape != null) {
-                  shape = selectedShape!;
-                }               
+            
+            if(selectedShape?.radius != null)
+            {
+              int? original_radius = selectedShape?.radius;   // keep original radius
+           
+              selectedShape?.start_dx = details.localPosition.dx;
+              selectedShape?.start_dy = details.localPosition.dy;
+              selectedShape?.color = currentColor;
+              selectedShape?.thickness = currentThickness.toInt();
+              
+              if (original_radius != null) {
+                selectedShape!.radius = original_radius;
               }
-            }   
+              print("moving start-point!! \n");
+              for (var shape in shapes) {
+                if (selectedShape?.getId() == shape.getId()) {
+                  if (selectedShape != null) {
+                    shape = selectedShape!;
+                  }               
+                }
+              }  
+            } 
         }
         shape_isSelected = false;
       }
     });
+  }
+
+  void selectedShape_changeColor(){
+
+  }
+
+  void selectedShape_changeThickness(){
+
   }
 
   void isShape(TapUpDetails details)

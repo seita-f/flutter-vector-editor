@@ -14,7 +14,8 @@ abstract class Shape {
   int thickness;
   Color color;
   int id;
-
+  int radius = 0;
+  
   var start_dx;
   var start_dy;
   var end_dx;

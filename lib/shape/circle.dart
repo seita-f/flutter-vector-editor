@@ -35,9 +35,6 @@ class Circle extends Shape {
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
     
-    // update for editing by user
-    this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
-
     if(!isAntiAliased){
         Midpoint_circle(size, pixels);
     }
@@ -63,7 +60,7 @@ class Circle extends Shape {
     int x = 0;
     int y = radius;
 
-    print("radius: $radius");
+    // print("radius: $radius");
 
     while (y >= x) {
       drawCircle(pixels, size, x, y);
@@ -182,16 +179,6 @@ class Circle extends Shape {
     Point temp = Point(this.start_dx, this.start_dy);
     return (temp - touchedPoint).distance < radius;
   }
-  // bool contains(Point touchedPoints) {
-  //     Point start = Point(start_dx, start_dy);
-  //     Point end = Point(end_dx, end_dy);
-  //     //   true if point is within 10 pixels of the line
-  //     final distance = (end-start).distance;
-  //     final distance1 = (touchedPoints - start).distance;
-  //     final distance2 = (touchedPoints - end).distance;
-  //     return (distance1 + distance2 - distance).abs() < 10;
-  // }
-
 
   //------ File Manager ------
   @override
