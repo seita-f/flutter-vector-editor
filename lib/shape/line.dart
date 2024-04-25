@@ -228,4 +228,47 @@ class Line extends Shape {
             }
         }
     }
+
+    //------- Edit graph -------
+    @override
+    bool contains(Point touchedPoints) {
+        Point start = Point(start_dx, start_dy);
+        Point end = Point(end_dx, end_dy);
+        //   true if point is within 5 pixels of the line
+        final distance = (end-start).distance;
+        final distance1 = (touchedPoints - start).distance;
+        final distance2 = (touchedPoints - end).distance;
+        return (distance1 + distance2 - distance).abs() < 5;
+    }
+
+    //----- File Manger -----
+    @override
+    static Shape? fromJson(Map<String, dynamic> json) {
+        if (json['type'] == 'line') {
+            List<Point> points = [
+                Point(json['start']['dx'], json['start']['dy']),
+                Point(json['end']['dx'], json['end']['dy']),
+            ];
+            int thickness = json['thickness'];
+            Color color = Color(json['color']);
+
+            // Fix: Pass the required positional arguments directly
+            return Line(points, thickness, color);
+        }
+        return null;
+    }
+
+    @override
+    Map<String, dynamic> toJson() {
+        // print("start: $start_dx, $end_dx");
+        // print("end  : $end_dx,   $end_dy");
+ 
+        return {
+        'type': 'line',
+        'start': {'dx': start_dx, 'dy': start_dy},
+        'end': {'dx': end_dx, 'dy': end_dy},
+        'thickness': thickness,
+        'color': color.value,
+        };
+    }
 }

@@ -173,4 +173,37 @@ class Circle extends Shape {
       pixels[index + 3] = color.alpha;
     }
   }
+
+  //------ Edit graph ------
+  @override
+  bool contains(Point touchedPoints) {
+    Point start = Point(start_dx, start_dy);
+    return (start - touchedPoints).distance < radius;
+  }
+
+  //------ File Manager ------
+  @override
+  static Shape? fromJson(Map<String, dynamic> json) {
+    if (json['type'] == 'circle') {
+      
+        List<Point> points = [
+                Point(json['start']['dx'], json['start']['dy']),
+                Point(json['end']['dx'], json['end']['dy']),
+        ];
+        int thickness = json['thickness'];
+        Color color = Color(json['color']);
+        return Circle(points, thickness, color);
+    }
+  }
+
+  @override
+  Map<String, dynamic> toJson() { 
+    return {
+      'type': 'circle',
+      'start': {'dx': start_dx, 'dy': start_dy},
+      'end': {'dx': end_dx, 'dy': end_dy},
+      'thickness': thickness,
+      'color': color.value,
+      };
+  }
 }

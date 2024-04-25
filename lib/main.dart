@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
 import 'dart:async';
+import 'package:file_picker/file_picker.dart';  // FilePicker
+import 'dart:io';
 
 // files
 import 'points.dart';
@@ -9,6 +11,7 @@ import 'pixelOperation.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
+import 'fileManager.dart';
 
 void main() {
   runApp(MyApp());
@@ -57,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
+  bool shape_edit = false;
 
   // Flag for editing
   bool movingVertex = false;
@@ -113,6 +117,64 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       print(shapes);
     });
+  }
+
+  //----- File Manager -----
+  void saveFile() async {
+    String? directoryPath = await FilePicker.platform.getDirectoryPath();
+
+    if (directoryPath == null) return; // Exit if no directory selected
+
+    TextEditingController fileNameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter File Name'),
+          content: TextField(
+            controller: fileNameController,
+            decoration: InputDecoration(hintText: "File name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () {
+                String fileName = fileNameController.text;
+                if (fileName.isEmpty) {
+                  print("No file name entered.");
+                  Navigator.of(context).pop();
+                  return;
+                }
+                String fullPath = '$directoryPath/$fileName';
+                Navigator.of(context).pop();
+                FileManager.saveShapes(shapes, fullPath).then((file) {
+                  if (file != null) {
+                    print("File saved to $fullPath");
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void loadFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result == null) return; // Exit if no file picked
+
+    String? filePath = result.files.single.path;
+    if (filePath == null) {
+      print("No file selected.");
+      return;
+    }
+    shapes = await FileManager.loadShapes(filePath);
+    setState(() {});
   }
 
   //----- Functions -----
@@ -250,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // ----- SHAPE SELECT -----
                           ToggleButtons(
                             children: <Widget>[
-                              Icon(Icons.line_weight),
+                              Icon(Icons.line_weight), // Line icon
                               Icon(Icons.radio_button_unchecked), // Circle icon
                               Icon(Icons.change_history), // Triangle icon
                             ],
@@ -262,22 +324,43 @@ class _MyHomePageState extends State<MyHomePage> {
                                   drawingLine = true; 
                                   drawingCircle = false; 
                                   drawingPolygon = false;
+                                  shape_edit = false;
                                 }
                                 if(shapeType == 'Circle'){ 
                                   drawingLine = false; 
                                   drawingCircle = true; 
                                   drawingPolygon = false;
+                                  shape_edit = false;
                                 }
                                 if(shapeType == 'Polygon')
                                 { drawingLine = false; 
                                   drawingCircle = false; 
                                   drawingPolygon = true;
+                                  shape_edit = false;
                                 }
                               });
                             },
                           ),
                           Row(
                             children: [
+                              // ------ Edit button -----
+                              Expanded(
+                                child: IconButton(
+                                  icon: Icon(Icons.edit),
+                                  color: shape_edit ? Colors.purple : Colors.black, 
+                                  onPressed: () {
+                                    // Add eraser functionality here
+                                    setState(() {
+                                      shapeType = ''; // shapeType を空にリセットする
+                                      shape_edit = true; 
+                                      drawingLine = false; 
+                                      drawingCircle = false; 
+                                      drawingPolygon = false;
+                                      print("shape_edit clicked! $shape_edit");
+                                    });
+                                  },
+                                ),
+                              ),
                               // ----- DELETE -----
                               Expanded(
                                 child: IconButton(
@@ -324,13 +407,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ElevatedButton(
                                       child: Text("Load"),
                                       onPressed: () {
-                                        // Load functionality
+                                        loadFile();
                                       },
                                     ),
                                     ElevatedButton(
                                       child: Text("Save"),
                                       onPressed: () {
-                                        // Save functionality
+                                        saveFile();
                                       },
                                     ),
                                   ],
