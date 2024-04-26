@@ -60,8 +60,6 @@ class Circle extends Shape {
     int x = 0;
     int y = radius;
 
-    // print("radius: $radius");
-
     while (y >= x) {
       drawCircle(pixels, size, x, y);
       if (d < 0) {
@@ -180,6 +178,18 @@ class Circle extends Shape {
     return (temp - touchedPoint).distance < radius;
   }
 
+  @override
+  bool isStartPoint(Point tappedPoint){
+    Point start = Point(this.start_dx, this.start_dy);
+
+    // Calculate the distance from the tapped point to the start point
+    final distance = (tappedPoint - start).distance;
+    print("distance: $distance");
+    // Return true if the distance is less than or equal to 10 pixels
+    return distance <= 20;
+  }
+
+
   //------ File Manager ------
   @override
   static Shape? fromJson(Map<String, dynamic> json) {
@@ -194,12 +204,6 @@ class Circle extends Shape {
         int id = json['id'];
         return Circle(points, thickness, color, id);
     }
-  }
-
-  bool isStartPoint(Point tappedPoint){
-    final dist_to_start = (tappedPoint - this.points[0]).distance;
-    final dist_to_end = (tappedPoint - this.points[1]).distance;
-    return dist_to_start < dist_to_end;  // true => moving circle by tapping starting point
   }
 
   @override

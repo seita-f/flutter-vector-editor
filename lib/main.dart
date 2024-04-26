@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';  // FilePicker
 import 'dart:io';
+import 'dart:math';
 
 // files
 import 'points.dart';
@@ -91,21 +92,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if(!shape_isSelected){
         points.add(offsetToPoint(details.localPosition));
-        print("${details.localPosition} \n");
+        // print("${details.localPosition} \n");
       }
       else{
         Point temp = Point(details.localPosition.dx, details.localPosition.dy);
 
         if (selectedShape != null) {
-            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == false)) {
-                // selectedShapeがtempを含むかチェック
-                movingVertex = true;
-                print("moving vertex is true\n");
-            }
-            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == true)) {
-                // selectedShapeがtempを含むかチェック
-                movingLocation = true;
-                print("moving location is true\n");
+            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == false)) {   
+              movingVertex = true;
+              movingLocation = false;
+              print("moving vertex is true\n");
+            }else if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == true)) {
+              movingLocation = true;
+              movingVertex == false;
+              print("moving location is true\n");
             }
         }
       }
@@ -146,31 +146,41 @@ class _MyHomePageState extends State<MyHomePage> {
       else{
         if(movingVertex == true){ // moving end point
             
-            selectedShape?.end_dx = details.localPosition.dx;
-            selectedShape?.end_dy = details.localPosition.dy;
-            selectedShape?.color = currentColor;
-            selectedShape?.thickness = currentThickness.toInt();
-            print("moving end-point!! \n");
+            if(selectedShape?.radius != null)
+            {
+              selectedShape?.end_dx = details.localPosition.dx;
+              selectedShape?.end_dy = details.localPosition.dy;
+              int? updated_radius = (sqrt(pow((details.localPosition.dx - selectedShape?.start_dx), 2) + pow((details.localPosition.dy - selectedShape?.start_dy), 2) )).toInt();
 
-            for (var shape in shapes) {
-              if (selectedShape?.getId() == shape.getId()) {
-                if (selectedShape != null) {
-                  shape = selectedShape!;
-                }               
+              selectedShape?.color = currentColor;
+              selectedShape?.thickness = currentThickness.toInt();
+
+              if (updated_radius != null) {
+                selectedShape!.radius = updated_radius;
+              }
+
+              print("moving-end point called!\n");
+              for (var shape in shapes) {
+                if (selectedShape?.getId() == shape.getId()) {
+                  if (selectedShape != null) {
+                    shape = selectedShape!;
+                  }               
+                }
               }
             }
+            movingVertex = false;
+            movingLocation = false;
         }
-        if(movingLocation == true){ // moving stat point
-            
+        else if(movingLocation == true){ // moving start point
             if(selectedShape?.radius != null)
             {
               int? original_radius = selectedShape?.radius;   // keep original radius
-           
+
               selectedShape?.start_dx = details.localPosition.dx;
               selectedShape?.start_dy = details.localPosition.dy;
               selectedShape?.color = currentColor;
               selectedShape?.thickness = currentThickness.toInt();
-              
+
               if (original_radius != null) {
                 selectedShape!.radius = original_radius;
               }
@@ -183,19 +193,31 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               }  
             } 
+            movingVertex = false;
+            movingLocation = false;
         }
         shape_isSelected = false;
       }
     });
   }
 
-  void selectedShape_changeColor(){
-
+  deleteSelectedObj(){
+    
+    if (shape_isSelected && selectedShape != null) {
+      shapes.removeWhere((shape) => shape.getId() == selectedShape!.getId());
+      selectedShape = null;
+      shape_isSelected = false; 
+      print("Selected shape has been deleted.");
+    }
   }
 
-  void selectedShape_changeThickness(){
+  // void selectedShape_changeColor(){
 
-  }
+  // }
+
+  // void selectedShape_changeThickness(){
+
+  // }
 
   void isShape(TapUpDetails details)
   {
@@ -455,17 +477,30 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                 ),
                               ),
-                              // ----- DELETE -----
+                              // ----- DELETE ALL -----
                               Expanded(
-                                child: IconButton(
-                                  icon: Icon(Icons.delete),
+                                child: TextButton.icon(
+                                  icon: Icon(Icons.delete_outline, color: Colors.black),
+                                  label: Text('Delete All', style: TextStyle(color: Colors.black)),
                                   onPressed: () {
-                                    // Add eraser functionality here
+                                    // Add eraser functionality for deleting all shapes
                                     setState(() {
-                                      // points.clear();  // Example of erasing all
-                                      shapes.clear();
+                                      shapes.clear();  // Clears all shapes
                                       id = 0;
                                       print("Deleted all shapes!");
+                                    });
+                                  },
+                                ),
+                              ),
+                              // ----- DELETE INDIVIDUAL SHAPE -----
+                              Expanded(
+                                child: TextButton.icon(
+                                  icon: Icon(Icons.delete_forever, color: Colors.black),
+                                  label: Text('Delete Selected', style: TextStyle(color: Colors.black)),
+                                  onPressed: () {
+                                    // Add eraser functionality for deleting selected shape
+                                    setState(() {
+                                      deleteSelectedObj();
                                     });
                                   },
                                 ),

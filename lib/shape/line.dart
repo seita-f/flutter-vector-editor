@@ -18,6 +18,7 @@ class Line extends Shape {
     end_dx = points[1].dx;
     end_dy = points[1].dy;
     id = id;
+    radius = -10;
   }
  
   // DDA Algorithm for line drawing
@@ -177,13 +178,13 @@ class Line extends Shape {
             interY += gradient;
         }
         } else {
-        for (double x = xPixel1 + 1; x < xPixel2; x++) {
-            antiAliased_drawPixel(
-                size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
-            antiAliased_drawPixel(
-                size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
-            interY += gradient;
-        }
+            for (double x = xPixel1 + 1; x < xPixel2; x++) {
+                antiAliased_drawPixel(
+                    size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
+                antiAliased_drawPixel(
+                    size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
+                interY += gradient;
+            }
         }
     }
 
@@ -240,6 +241,9 @@ class Line extends Shape {
         final distance2 = (touchedPoints - end).distance;
         return (distance1 + distance2 - distance).abs() < 5;
     }
+    
+    @override
+    bool isStartPoint(Point tappedPoint) => false;
 
     //----- File Manger -----
     @override

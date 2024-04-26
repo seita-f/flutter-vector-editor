@@ -15,7 +15,7 @@ abstract class Shape {
   Color color;
   int id;
   int radius = 0;
-  
+
   var start_dx;
   var start_dy;
   var end_dx;
@@ -45,16 +45,6 @@ abstract class Shape {
 
   //----- Constructor -----
   Shape(this.points, this.thickness, this.color, this.id);
-
-  // ----- Edit graph ------
-  int getVertexIndexOf(Point point) {
-    for (int i = 0; i < points.length; i++) {
-      if ((point - points[i]).distance < thickness + grabDistance) {
-        return i;
-      }
-    }
-    return -1;
-  }
 
   int getId(){
     return this.id;
