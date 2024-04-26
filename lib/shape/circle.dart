@@ -13,24 +13,26 @@ class Circle extends Shape {
   double endAngle = 0;
   double relativeStartAngle = 0;
   bool full = true;
+
+  Circle(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
   
-  Circle(List<Point> points, int thickness, Color color) : super(points, thickness, color)
   {
     print("----- Circle obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
 
-    this.start_dx = points[0].dx;
-    this.start_dy = points[0].dy;
-    this.end_dx = points[1].dx;
-    this.end_dy = points[1].dy;
+    start_dx = points[0].dx;
+    start_dy = points[0].dy;
+    end_dx = points[1].dx;
+    end_dy = points[1].dy;
+    id = id;
 
     this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
   }
  
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
-
+    
     if(!isAntiAliased){
         Midpoint_circle(size, pixels);
     }
@@ -55,8 +57,6 @@ class Circle extends Shape {
     int d = 1 - radius;
     int x = 0;
     int y = radius;
-
-    print("radius: $radius");
 
     while (y >= x) {
       drawCircle(pixels, size, x, y);
@@ -171,10 +171,22 @@ class Circle extends Shape {
 
   //------ Edit graph ------
   @override
-  bool contains(Point touchedPoints) {
-    Point start = Point(start_dx, start_dy);
-    return (start - touchedPoints).distance < radius;
+  bool contains(Point touchedPoint) {
+    Point temp = Point(this.start_dx, this.start_dy);
+    return (temp - touchedPoint).distance < radius;
   }
+
+  @override
+  bool isStartPoint(Point tappedPoint){
+    Point start = Point(this.start_dx, this.start_dy);
+
+    // Calculate the distance from the tapped point to the start point
+    final distance = (tappedPoint - start).distance;
+    print("distance: $distance");
+    // Return true if the distance is less than or equal to 10 pixels
+    return distance <= 20;
+  }
+
 
   //------ File Manager ------
   @override
@@ -187,7 +199,8 @@ class Circle extends Shape {
         ];
         int thickness = json['thickness'];
         Color color = Color(json['color']);
-        return Circle(points, thickness, color);
+        int id = json['id'];
+        return Circle(points, thickness, color, id);
     }
   }
 
@@ -199,13 +212,14 @@ class Circle extends Shape {
       'end': {'dx': end_dx, 'dy': end_dy},
       'thickness': thickness,
       'color': color.value,
+      'id': id,
       };
   }
 
   @override
   String toString() {
-    return "Circle Object: start (${this.start_dx}, ${this.start_dy}), radius "
+    return "<${this.id}> Circle Object: start (${this.start_dx}, ${this.start_dy}), radius "
           "${this.radius}, "
-          "thickness ${this.thickness}, color ${this.color}";
+          "thickness ${this.thickness}, color ${this.color} \n";
   }
 }

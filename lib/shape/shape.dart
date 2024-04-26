@@ -13,17 +13,21 @@ abstract class Shape {
   final List<Point> points;
   int thickness;
   Color color;
+  int id;
+  int radius = 0;
 
   var start_dx;
   var start_dy;
   var end_dx;
   var end_dy;
+ 
   
   //----- override methods ------
   Shape(this.points, this.thickness, this.color);
 
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
   bool contains(Point points) => false; // default
+  bool isStartPoint(Point tappedPoint) => false;  // for circle 
 
   static Shape? fromJson(Map<String, dynamic> json) {
     String type = json['type'];
@@ -42,8 +46,11 @@ abstract class Shape {
   String toString();
 
   //----- Constructor -----
-  Shape(this.points, this.thickness, this.color);
+  Shape(this.points, this.thickness, this.color, this.id);
 
+  int getId(){
+    return this.id;
+  }
 
   // ----- Edit graph ------
   static Shape? fromJson(Map<String, dynamic> json) {
@@ -101,6 +108,5 @@ abstract class Shape {
     double normalLength = (b - a).distance;
     return ((point.dx - a.dx) * (b.dy - a.dy) - (point.dy - a.dy) * (b.dx - a.dx)).abs() / normalLength;
   }
-
 }
 

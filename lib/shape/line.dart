@@ -7,16 +7,18 @@ import 'package:flutter/material.dart';
 
 class Line extends Shape {
 
-  Line(List<Point> points, int thickness, Color color) : super(points, thickness, color)
+  Line(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
   {
     print("----- Line obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
 
-    this.start_dx = points[0].dx;
-    this.start_dy = points[0].dy;
-    this.end_dx = points[1].dx;
-    this.end_dy = points[1].dy;
+    start_dx = points[0].dx;
+    start_dy = points[0].dy;
+    end_dx = points[1].dx;
+    end_dy = points[1].dy;
+    id = id;
+    radius = -10;
   }
  
   // DDA Algorithm for line drawing
@@ -176,13 +178,13 @@ class Line extends Shape {
             interY += gradient;
         }
         } else {
-        for (double x = xPixel1 + 1; x < xPixel2; x++) {
-            antiAliased_drawPixel(
-                size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
-            antiAliased_drawPixel(
-                size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
-            interY += gradient;
-        }
+            for (double x = xPixel1 + 1; x < xPixel2; x++) {
+                antiAliased_drawPixel(
+                    size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
+                antiAliased_drawPixel(
+                    size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
+                interY += gradient;
+            }
         }
     }
 
@@ -239,6 +241,9 @@ class Line extends Shape {
         final distance2 = (touchedPoints - end).distance;
         return (distance1 + distance2 - distance).abs() < 5;
     }
+    
+    @override
+    bool isStartPoint(Point tappedPoint) => false;
 
     //----- File Manger -----
     @override
@@ -250,9 +255,10 @@ class Line extends Shape {
             ];
             int thickness = json['thickness'];
             Color color = Color(json['color']);
+            int id = json['id'];
 
             // Fix: Pass the required positional arguments directly
-            return Line(points, thickness, color);
+            return Line(points, thickness, color, id);
         }
         return null;
     }
@@ -261,20 +267,20 @@ class Line extends Shape {
     Map<String, dynamic> toJson() {
         // print("start: $start_dx, $end_dx");
         // print("end  : $end_dx,   $end_dy");
- 
         return {
         'type': 'line',
         'start': {'dx': start_dx, 'dy': start_dy},
         'end': {'dx': end_dx, 'dy': end_dy},
         'thickness': thickness,
         'color': color.value,
+        'id': id,
         };
     }
 
     @override
     String toString() {
-        return "Line Object: start (${this.start_dx}, ${this.start_dy}), end "
+        return "<${this.id}> Line Object : start (${this.start_dx}, ${this.start_dy}), end "
                 "(${this.end_dx}, ${this.end_dy}), "
-                "thickness ${this.thickness}, color ${this.color}";
+                "thickness ${this.thickness}, color ${this.color} \n";
     }
 }
