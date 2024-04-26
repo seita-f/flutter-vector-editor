@@ -11,6 +11,8 @@ import 'points.dart';
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
+import 'shape/polygon.dart';
+import 'shape/wave.dart';
 import 'fileManager.dart';
 
 void main() {
@@ -56,13 +58,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Color currentColor = Colors.black;  // default
   Color canvasColor = Color(0xFFF5F5F5);
   int id = 0;
+  int n_circle = 1; // default
 
   // Flag for drawing
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
+  bool drawingWave = false;
   bool antiAliased = false;
- 
+  
   // Flag for editing
   bool shape_edit = false;
   bool contain = false;
@@ -72,8 +76,13 @@ class _MyHomePageState extends State<MyHomePage> {
   
   Shape? selectedShape = null;
 
+  // polygon
+
+
   // Point
   List<Point> points = List<Point>.empty(growable: true);
+  List<Point> polygonPoints = List<Point>.empty(growable: true);
+
   List<Shape> shapes = List<Shape>.empty(growable: true);
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
@@ -91,7 +100,13 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
 
       if(!shape_isSelected){
-        points.add(offsetToPoint(details.localPosition));
+        if(!drawingPolygon){
+          points.add(offsetToPoint(details.localPosition));
+        }else{
+          print("start point: ${details.localPosition} is added to polygonPoints \n");
+          polygonPoints.add(offsetToPoint(details.localPosition));
+        }
+        
         // print("${details.localPosition} \n");
       }
       else{
@@ -119,6 +134,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // check if the start point is closed to the last point
+  bool isClosed(Point point1, Point point2){
+    final distance = (point2 - point1).distance;
+    print("isClosed distance: $distance");
+    return distance <= 10;
+  }
+
   void stopDrawing(DragEndDetails details) {
     print("stopDrawing() is called!");
     setState(() {
@@ -139,7 +161,25 @@ class _MyHomePageState extends State<MyHomePage> {
           points.clear();
         }
         else if(drawingPolygon){
-          // drawing polygon
+          
+          // add points
+          polygonPoints.add(offsetToPoint(details.localPosition));
+          print("end point: ${details.localPosition} is added to polygonPoints \n");
+
+          if(isClosed(polygonPoints[0], polygonPoints[polygonPoints.length - 1])){
+            print("Polygon is closed!\n");
+            polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
+            shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+            id += 1;
+            polygonPoints.clear();
+          }
+        }
+        else if(drawingWave){
+          print("drawingWave is calling! \n");
+          print("n_circle: $n_circle");
+          shapes.add(Wave(points, currentThickness.toInt(), currentColor, id, n_circle));
+          id += 1;
+          points.clear();
         }
         print("$shapes \n");
       }
@@ -431,27 +471,38 @@ class _MyHomePageState extends State<MyHomePage> {
                               Icon(Icons.line_weight), // Line icon
                               Icon(Icons.radio_button_unchecked), // Circle icon
                               Icon(Icons.change_history), // Triangle icon
+                              Icon(Icons.waves), // wave
                             ],
-                            isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon'],
+                            isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon', shapeType == 'Wave'],
                             onPressed: (int index) {
                               setState(() {
-                                shapeType = ['Line', 'Circle', 'Polygon'][index];
+                                shapeType = ['Line', 'Circle', 'Polygon', 'Wave',][index];
                                 if(shapeType == 'Line'){ 
                                   drawingLine = true; 
                                   drawingCircle = false; 
                                   drawingPolygon = false;
+                                  drawingWave = false;
                                   shape_edit = false;
                                 }
                                 if(shapeType == 'Circle'){ 
                                   drawingLine = false; 
                                   drawingCircle = true; 
                                   drawingPolygon = false;
+                                  drawingWave = false;
                                   shape_edit = false;
                                 }
                                 if(shapeType == 'Polygon')
                                 { drawingLine = false; 
                                   drawingCircle = false; 
                                   drawingPolygon = true;
+                                  drawingWave = false;
+                                  shape_edit = false;
+                                }
+                                if(shapeType == 'Wave')
+                                { drawingLine = false; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = false;
+                                  drawingWave = true;
                                   shape_edit = false;
                                 }
                               });
@@ -475,6 +526,24 @@ class _MyHomePageState extends State<MyHomePage> {
                                       print("shape_edit clicked! $shape_edit");
                                     });
                                   },
+                                ),
+                              ),
+                              // ----- Number selection dropdown -----
+                              Expanded(
+                                child: DropdownButton<int>(
+                                  value: n_circle,
+                                  onChanged: (int? newValue) {
+                                    setState(() {
+                                      n_circle = newValue!;
+                                      print("N: $n_circle \n");
+                                    });
+                                  },
+                                  items: List.generate(5, (index) {
+                                    return DropdownMenuItem<int>(
+                                      value: index + 1,
+                                      child: Text('${index + 1}'),
+                                    );
+                                  }),
                                 ),
                               ),
                               // ----- DELETE ALL -----

@@ -51,9 +51,10 @@ class Circle extends Shape {
     }
   }
   
-  // DDA Algorithm for line drawing
+  // Midpont algorithm
   void Midpoint_circle(ui.Size size, Uint8List pixels) {
 
+    print("Midpoint_circle() is called! \n");
     int dE = 3;
     int dSE = 5 - 2 * radius;
     int d = 1 - radius;
