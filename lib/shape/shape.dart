@@ -5,6 +5,7 @@ import '../points.dart';
 import 'dart:math' as math;
 import 'line.dart';
 import 'circle.dart';
+import 'polygon.dart';
 
 abstract class Shape {
 
@@ -21,7 +22,6 @@ abstract class Shape {
   var end_dx;
   var end_dy;
  
-  
   //----- override methods ------
   Shape(this.points, this.thickness, this.color);
 

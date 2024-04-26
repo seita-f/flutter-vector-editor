@@ -11,7 +11,7 @@ class Point {
   double distanceTo(Point other) {
     return math.sqrt(math.pow(dx - other.dx, 2) + math.pow(dy - other.dy, 2));
   }
-
+  
   // overload
   Point operator +(Point other) {
     return Point(dx + other.dx, dy + other.dy);
