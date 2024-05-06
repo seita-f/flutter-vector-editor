@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';  // FilePicker
 import 'dart:io';
 import 'dart:math';
+import 'dart:math' as math;
 
 // files
 import 'points.dart';
@@ -73,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shape_isSelected = false;
   bool movingVertex = false;
   bool movingLocation = false;
-  
+  bool isPlygonClosed = false;
   Shape? selectedShape = null;
 
   // polygon
@@ -103,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if(!drawingPolygon){
           points.add(offsetToPoint(details.localPosition));
         }else{
+          // polygon case
           print("start point: ${details.localPosition} is added to polygonPoints \n");
           polygonPoints.add(offsetToPoint(details.localPosition));
         }
@@ -134,11 +136,24 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  double calc_distance(Point point1, Point point2){
+    print("----- calc_distance is called -----\n");
+    print("point1: (${point1.dx}, ${point1.dy})\n");
+    print("point2: (${point2.dx}, ${point2.dy})\n");
+    print("x_diff: ${math.pow(point1.dx - point2.dx, 2)}, y_diff: ${math.pow(point1.dy - point2.dy, 2)} \n");
+    print("diff: ${(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))} \n");
+    print("distance: ${math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))}\n");
+    print("-----------------------------------\n");
+    double dist = math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+
+    return dist;
+  }
+
   // check if the start point is closed to the last point
   bool isClosed(Point point1, Point point2){
-    final distance = (point2 - point1).distance;
+    final distance = calc_distance(point1, point2);
     print("isClosed distance: $distance");
-    return distance <= 10;
+    return distance <= 17;
   }
 
   void stopDrawing(DragEndDetails details) {
@@ -162,16 +177,28 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         else if(drawingPolygon){
           
-          // add points
-          polygonPoints.add(offsetToPoint(details.localPosition));
+          // add points 
+          // polygonPoints.add(offsetToPoint(details.localPosition));
           print("end point: ${details.localPosition} is added to polygonPoints \n");
+          polygonPoints.add(offsetToPoint(details.localPosition));
+          // shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+          // shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+          
+          // DEBUG
+          // print("======== DEBUG =========\n");
+          for (var i = 0; i < polygonPoints.length - 1; i++) {
+            print("start: (${polygonPoints[i].dx}, ${polygonPoints[i].dy})\n");
+            print("end: (${polygonPoints[i+1].dx}, ${polygonPoints[i+1].dy})\n");
+          }
+          // print("=========================\n");
 
-          if(isClosed(polygonPoints[0], polygonPoints[polygonPoints.length - 1])){
-            print("Polygon is closed!\n");
+          // added point is closed to the start point, then closure 
+          if(isClosed(polygonPoints[0], polygonPoints[polygonPoints.length-1])){
+            print("###### Polygon is closed! ######\n");
             polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
             shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
             id += 1;
-            polygonPoints.clear();
+            // polygonPoints.clear();
           }
         }
         else if(drawingWave){
@@ -555,6 +582,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     // Add eraser functionality for deleting all shapes
                                     setState(() {
                                       shapes.clear();  // Clears all shapes
+                                      polygonPoints.clear();
                                       id = 0;
                                       print("Deleted all shapes!");
                                     });

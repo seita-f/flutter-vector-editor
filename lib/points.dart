@@ -24,4 +24,5 @@ class Point {
   double get distance {
     return sqrt(dx * dx + dy * dy);
   }
+
 }

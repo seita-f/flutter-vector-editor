@@ -5,38 +5,58 @@ import 'shape.dart';
 import '../points.dart';
 import 'line.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
+import 'dart:math' as math;
 
 class Polygon extends Shape {
 
-  final List<Point> all_points = [];
+  // final List<Point> all_points = [];
+  late List<Point> all_points;
   bool closed = false;
   
   Polygon(List<Point> all_points, int thickness, Color color, int id) : super(all_points, thickness, color, id)
   {
     print("----- Polygon obj -----");
-    print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
-    print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+    // print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
+    // print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+    this.all_points = all_points;
+    for (var i = 0; i < this.all_points.length - 1; i++) {
+      print("start: (${this.all_points[i].dx}, ${all_points[i].dy})\n");
+      print("end: (${this.all_points[i+1].dx}, ${all_points[i+1].dy})\n");
+    }
 
-    all_points = all_points;
     closed = false;
-    id = id;
+    this.id = id;
   }
 
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
 
-    print("Polygon draw() is called! \n");
+    if (all_points.length < 2) {
+      return; // 要素数が1未満の場合は処理をスキップ
+    }
+
     for (var i = 0; i < all_points.length - 1; i++) {
+      // final point1;
+      // if(all_points.length == 2){
+      //   point1 = all_points[0];
+      // }
+      // else{
+      //   // Let start point be the prev last end point
+      //   point1 = all_points[i-1];
+      // }
       final point1 = all_points[i];
       final point2 = all_points[i + 1];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
     }
-    // if (closed) {
-    //   final point1 = all_points[all_points.length - 1];
-    //   final point2 = all_points[0];
-    //   drawEdge(point1, point2, pixels, size, isAntiAliased);
-    // }
+    if (this.isClosed(all_points[0], all_points[all_points.length - 1])) {
+      print("isClosed() true!!\n");
+      final point1 = all_points[all_points.length - 1];
+      final point2 = all_points[0];
+      drawEdge(point1, point2, pixels, size, isAntiAliased);
+    }
   }
+
 
   void drawEdge(Point point1, Point point2, Uint8List pixels, ui.Size size, bool isAntiAliased) {
 
@@ -46,6 +66,17 @@ class Polygon extends Shape {
     ];
     final line = Line(linePoints, thickness, color, -10); // id
     line.draw(pixels, size, isAntiAliased: isAntiAliased);
+  }
+
+  double calc_distance(Point point1, Point point2){
+    return math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+  }
+
+  // check if the start point is closed to the last point
+  bool isClosed(Point point1, Point point2){
+    final distance = calc_distance(point1, point2);
+    print("isClosed distance: $distance");
+    return distance <= 17;
   }
 
   //------ File Manager ------

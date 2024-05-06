@@ -24,6 +24,7 @@ class Line extends Shape {
   // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
+    
     if (thickness == 1){
         DDA_line(size, pixels);
     }
