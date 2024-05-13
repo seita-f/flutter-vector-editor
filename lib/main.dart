@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';  // FilePicker
 import 'dart:io';
 import 'dart:math';
+import 'dart:math' as math;
 
 // files
 import 'points.dart';
@@ -12,7 +13,6 @@ import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
 import 'shape/polygon.dart';
-import 'shape/wave.dart';
 import 'fileManager.dart';
 
 void main() {
@@ -64,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
-  bool drawingWave = false;
   bool antiAliased = false;
   
   // Flag for editing
@@ -73,21 +72,18 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shape_isSelected = false;
   bool movingVertex = false;
   bool movingLocation = false;
-  
+  bool isPlygonClosed = false;
   Shape? selectedShape = null;
-
-  // polygon
-
 
   // Point
   List<Point> points = List<Point>.empty(growable: true);
   List<Point> polygonPoints = List<Point>.empty(growable: true);
+  List<Polygon> completedPolygons = [];  // これは描かれたすべてのポリゴンを保持します。
 
   List<Shape> shapes = List<Shape>.empty(growable: true);
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
-  Point previousCursorPosition = Point(0, 0);
-  Point currentCursorPosition = Point(0, 0);
+  Point previousToppedPosition = Point(0, 0);
 
   // Index
   int currentShapeIndex = -1;
@@ -102,26 +98,29 @@ class _MyHomePageState extends State<MyHomePage> {
     print("startDrawing() is called!");
 
     setState(() {
-
+      
+      // adding point to Point List to draw shape
       if(!shape_isSelected){
         if(!drawingPolygon){
           points.add(offsetToPoint(details.localPosition));
         }else{
+          // polygon case
           print("start point: ${details.localPosition} is added to polygonPoints \n");
           polygonPoints.add(offsetToPoint(details.localPosition));
         }
         
         // print("${details.localPosition} \n");
       }
-      else{
-        Point temp = Point(details.localPosition.dx, details.localPosition.dy);
+      else{ // 
+
+        previousToppedPosition = Point(details.localPosition.dx, details.localPosition.dy); // get the clicked location
 
         if (selectedShape != null) {
-            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == false)) {   
+            if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == false)) {   
               movingVertex = true;
               movingLocation = false;
               print("moving vertex is true\n");
-            }else if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == true)) {
+            }else if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == true)) {
               movingLocation = true;
               movingVertex == false;
               print("moving location is true\n");
@@ -138,11 +137,24 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  double calc_distance(Point point1, Point point2){
+    print("----- calc_distance is called -----\n");
+    print("point1: (${point1.dx}, ${point1.dy})\n");
+    print("point2: (${point2.dx}, ${point2.dy})\n");
+    print("x_diff: ${math.pow(point1.dx - point2.dx, 2)}, y_diff: ${math.pow(point1.dy - point2.dy, 2)} \n");
+    print("diff: ${(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))} \n");
+    print("distance: ${math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))}\n");
+    print("-----------------------------------\n");
+    double dist = math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+
+    return dist;
+  }
+
   // check if the start point is closed to the last point
   bool isClosed(Point point1, Point point2){
-    final distance = (point2 - point1).distance;
+    final distance = calc_distance(point1, point2);
     print("isClosed distance: $distance");
-    return distance <= 10;
+    return distance <= 17;
   }
 
   void stopDrawing(DragEndDetails details) {
@@ -150,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       
       print("shape_isSelected $shape_isSelected \n");
-      if(!shape_isSelected){
+      if(!shape_isSelected){ // adding the end point to point list
         points.add(offsetToPoint(details.localPosition));
         print(details.localPosition);
 
@@ -166,57 +178,70 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         else if(drawingPolygon){
           
-          // add points
-          polygonPoints.add(offsetToPoint(details.localPosition));
           print("end point: ${details.localPosition} is added to polygonPoints \n");
+          polygonPoints.add(offsetToPoint(details.localPosition));
 
-          if(isClosed(polygonPoints[0], polygonPoints[polygonPoints.length - 1])){
-            print("Polygon is closed!\n");
-            polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
+          if(polygonPoints.length < 3){
             shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+          }
+
+          // DEBUG
+          // print("======== DEBUG =========\n");
+          for (var i = 0; i < polygonPoints.length - 1; i++) {
+            print("start: (${polygonPoints[i].dx}, ${polygonPoints[i].dy})\n");
+            print("end: (${polygonPoints[i+1].dx}, ${polygonPoints[i+1].dy})\n");
+          }
+          // print("=========================\n");
+
+          // added point is closed to the start point, then closure 
+          if(isClosed(polygonPoints[0], polygonPoints[polygonPoints.length-1])){
+            print("###### Polygon is closed! ######\n");
+            polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
+            // 閉じたポリゴンをshapesリストに追加
+            shapes.add(Polygon(List.from(polygonPoints), currentThickness.toInt(), currentColor, id));
             id += 1;
             polygonPoints.clear();
           }
         }
-        else if(drawingWave){
-          print("drawingWave is calling! \n");
-          print("n_circle: $n_circle");
-          shapes.add(Wave(points, currentThickness.toInt(), currentColor, id, n_circle));
-          id += 1;
-          points.clear();
-        }
-        print("$shapes \n");
       }
-      else{
-        if(movingVertex == true){ // moving end point
+      else{ // edit mode
+
+        if(movingVertex == true) { // moving end point
+          
+            Point newPoint = Point(details.localPosition.dx, details.localPosition.dy);
             
-            if(selectedShape?.radius != null)
-            {
-              selectedShape?.end_dx = details.localPosition.dx;
-              selectedShape?.end_dy = details.localPosition.dy;
-              int? updated_radius = (sqrt(pow((details.localPosition.dx - selectedShape?.start_dx), 2) + pow((details.localPosition.dy - selectedShape?.start_dy), 2) )).toInt();
+            // Point original = //   selectedShape?.end_dx = details.localPosition.dx;
+            //   selectedShape?.end_dy = details.localPosition.dy;
 
-              selectedShape?.color = currentColor;
-              selectedShape?.thickness = currentThickness.toInt();
+            // if(selectedShape?.radius != null)
+            // {
+            //   selectedShape?.end_dx = details.localPosition.dx;
+            //   selectedShape?.end_dy = details.localPosition.dy;
+            //   int? updated_radius = (sqrt(pow((details.localPosition.dx - selectedShape?.start_dx), 2) + pow((details.localPosition.dy - selectedShape?.start_dy), 2) )).toInt();
 
-              if (updated_radius != null) {
-                selectedShape!.radius = updated_radius;
-              }
+            //   selectedShape?.color = currentColor;
+            //   selectedShape?.thickness = currentThickness.toInt();
+
+            //   if (updated_radius != null) {
+            //     selectedShape!.radius = updated_radius;
+            //   }
 
               print("moving-end point called!\n");
               for (var shape in shapes) {
                 if (selectedShape?.getId() == shape.getId()) {
                   if (selectedShape != null) {
-                    shape = selectedShape!;
+                    // shape = selectedShape!;
+                    shape.movingVertex(previousToppedPosition, newPoint, currentColor, currentThickness.toInt());
                   }               
                 }
               }
-            }
+            
             movingVertex = false;
             movingLocation = false;
         }
         else if(movingLocation == true){ // moving start point
-            if(selectedShape?.radius != null)
+
+            if(selectedShape?.radius != null)  // moving circle
             {
               int? original_radius = selectedShape?.radius;   // keep original radius
 
@@ -254,14 +279,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Selected shape has been deleted.");
     }
   }
-
-  // void selectedShape_changeColor(){
-
-  // }
-
-  // void selectedShape_changeThickness(){
-
-  // }
 
   void isShape(TapUpDetails details)
   {
@@ -476,38 +493,27 @@ class _MyHomePageState extends State<MyHomePage> {
                               Icon(Icons.line_weight), // Line icon
                               Icon(Icons.radio_button_unchecked), // Circle icon
                               Icon(Icons.change_history), // Triangle icon
-                              Icon(Icons.waves), // wave
                             ],
-                            isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon', shapeType == 'Wave'],
+                            isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon'],
                             onPressed: (int index) {
                               setState(() {
-                                shapeType = ['Line', 'Circle', 'Polygon', 'Wave',][index];
+                                shapeType = ['Line', 'Circle', 'Polygon',][index];
                                 if(shapeType == 'Line'){ 
                                   drawingLine = true; 
                                   drawingCircle = false; 
                                   drawingPolygon = false;
-                                  drawingWave = false;
                                   shape_edit = false;
                                 }
                                 if(shapeType == 'Circle'){ 
                                   drawingLine = false; 
                                   drawingCircle = true; 
                                   drawingPolygon = false;
-                                  drawingWave = false;
                                   shape_edit = false;
                                 }
                                 if(shapeType == 'Polygon')
                                 { drawingLine = false; 
                                   drawingCircle = false; 
                                   drawingPolygon = true;
-                                  drawingWave = false;
-                                  shape_edit = false;
-                                }
-                                if(shapeType == 'Wave')
-                                { drawingLine = false; 
-                                  drawingCircle = false; 
-                                  drawingPolygon = false;
-                                  drawingWave = true;
                                   shape_edit = false;
                                 }
                               });
@@ -534,23 +540,23 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ),
                               // ----- Number selection dropdown -----
-                              Expanded(
-                                child: DropdownButton<int>(
-                                  value: n_circle,
-                                  onChanged: (int? newValue) {
-                                    setState(() {
-                                      n_circle = newValue!;
-                                      print("N: $n_circle \n");
-                                    });
-                                  },
-                                  items: List.generate(5, (index) {
-                                    return DropdownMenuItem<int>(
-                                      value: index + 1,
-                                      child: Text('${index + 1}'),
-                                    );
-                                  }),
-                                ),
-                              ),
+                              // Expanded(
+                              //   child: DropdownButton<int>(
+                              //     value: n_circle,
+                              //     onChanged: (int? newValue) {
+                              //       setState(() {
+                              //         n_circle = newValue!;
+                              //         print("N: $n_circle \n");
+                              //       });
+                              //     },
+                              //     items: List.generate(5, (index) {
+                              //       return DropdownMenuItem<int>(
+                              //         value: index + 1,
+                              //         child: Text('${index + 1}'),
+                              //       );
+                              //     }),
+                              //   ),
+                              // ),
                               // ----- DELETE ALL -----
                               Expanded(
                                 child: TextButton.icon(
@@ -560,6 +566,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     // Add eraser functionality for deleting all shapes
                                     setState(() {
                                       shapes.clear();  // Clears all shapes
+                                      polygonPoints.clear();
                                       id = 0;
                                       print("Deleted all shapes!");
                                     });

@@ -28,6 +28,7 @@ abstract class Shape {
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false});
   bool contains(Point points) => false; // default
   bool isStartPoint(Point tappedPoint) => false;  // for circle 
+  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness);
 
   static Shape? fromJson(Map<String, dynamic> json) {
     String type = json['type'];
