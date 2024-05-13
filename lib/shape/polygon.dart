@@ -72,6 +72,22 @@ class Polygon extends Shape {
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
     // updateLines(color, thickness);
     print("polygon moving vertex is called \n");
+
+    print(originalPoint);
+    print(newPoint);
+
+    this.color = color;
+    this.thickness = thickness;
+    
+    for (var i = 0; i < this.all_points.length -1; i++) {
+      final distance = (all_points[i+1]-all_points[i]).distance;
+        final distance1 = (originalPoint - all_points[i]).distance;
+        final distance2 = (originalPoint - all_points[i+1]).distance;
+        if((distance1 + distance2 - distance).abs() < 20){
+          print("newPoint is assgined \n");
+          all_points[i] = newPoint;
+        }
+    }
   }
 
   double calc_distance(Point point1, Point point2){

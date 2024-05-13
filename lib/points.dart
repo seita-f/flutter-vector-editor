@@ -25,4 +25,7 @@ class Point {
     return sqrt(dx * dx + dy * dy);
   }
 
+  String toString(){
+    return "(${this.dx}, ${this.dy}) \n";
+  }
 }

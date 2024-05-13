@@ -83,8 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Shape> shapes = List<Shape>.empty(growable: true);
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
-  Point previousCursorPosition = Point(0, 0);
-  Point currentCursorPosition = Point(0, 0);
+  Point previousToppedPosition = Point(0, 0);
 
   // Index
   int currentShapeIndex = -1;
@@ -110,14 +109,14 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else{ // 
 
-        Point temp = Point(details.localPosition.dx, details.localPosition.dy); // get the clicked location
+        previousToppedPosition = Point(details.localPosition.dx, details.localPosition.dy); // get the clicked location
 
         if (selectedShape != null) {
-            if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == false)) {   
+            if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == false)) {   
               movingVertex = true;
               movingLocation = false;
               print("moving vertex is true\n");
-            }else if ((selectedShape?.contains(temp) == true) && (selectedShape?.isStartPoint(temp) == true)) {
+            }else if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == true)) {
               movingLocation = true;
               movingVertex == false;
               print("moving location is true\n");
@@ -180,7 +179,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
           if(polygonPoints.length < 3){
             shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
-            // id += 1;
           }
 
           // DEBUG
@@ -205,9 +203,9 @@ class _MyHomePageState extends State<MyHomePage> {
       else{ // edit mode
 
         if(movingVertex == true) { // moving end point
-            
-            Point originalPoint = Point(details.localPosition.dx, details.localPosition.dy);
+          
             Point newPoint = Point(details.localPosition.dx, details.localPosition.dy);
+            
             // Point original = //   selectedShape?.end_dx = details.localPosition.dx;
             //   selectedShape?.end_dy = details.localPosition.dy;
 
@@ -229,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (selectedShape?.getId() == shape.getId()) {
                   if (selectedShape != null) {
                     // shape = selectedShape!;
-                    shape.movingVertex(originalPoint, newPoint, currentColor, currentThickness.toInt());
+                    shape.movingVertex(previousToppedPosition, newPoint, currentColor, currentThickness.toInt());
                   }               
                 }
               }
