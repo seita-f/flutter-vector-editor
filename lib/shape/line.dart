@@ -14,19 +14,20 @@ class Line extends Shape {
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
     print("color: ${this.color}, thickness:${this.thickness} \n");
 
-    start_dx = points[0].dx;
-    start_dy = points[0].dy;
-    end_dx = points[1].dx;
-    end_dy = points[1].dy;
-    id = id;
-    radius = -10;
+    this.start_dx = points[0].dx;
+    this.start_dy = points[0].dy;
+    this.end_dx = points[1].dx;
+    this.end_dy = points[1].dy;
+    this.id = id;
+    this.radius = -10;
   }
     
   @override
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
       this.color = color;
       this.thickness = thickness;
-      print("skip for now \n");
+      this.end_dx = newPoint.dx;
+      this.end_dy = newPoint.dy;
   }
 
   // DDA Algorithm for line drawing
