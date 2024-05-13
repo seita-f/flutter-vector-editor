@@ -90,6 +90,10 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
 
+  // File manager
+  String? selectedDirectory;
+  TextEditingController fileNameController = TextEditingController();
+
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
 
@@ -358,6 +362,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Size getScreenSize(BuildContext context) {
     return MediaQuery.of(context).size;  // 画面のサイズを取得
   }
+
 
   @override
   Widget build(BuildContext context) {

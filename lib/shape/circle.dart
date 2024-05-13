@@ -15,6 +15,7 @@ class Circle extends Shape {
   bool full = true;
 
   Circle(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
+  
   {
     print("----- Circle obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
@@ -25,11 +26,8 @@ class Circle extends Shape {
     this.end_dx = points[1].dx;
     this.end_dy = points[1].dy;
     this.id = id;
+
     this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
-    // this.startAngle = 0;
-    // this.endAngle = 2 * pi;
-    // this.relativeStartAngle = 0;
-    // this.full = true;
   }
  
   @override
