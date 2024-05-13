@@ -12,6 +12,7 @@ class Line extends Shape {
     print("----- Line obj -----");
     print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+    print("color: ${this.color}, thickness:${this.thickness} \n");
 
     start_dx = points[0].dx;
     start_dy = points[0].dy;
@@ -20,7 +21,14 @@ class Line extends Shape {
     id = id;
     radius = -10;
   }
- 
+    
+  @override
+  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
+      this.color = color;
+      this.thickness = thickness;
+      print("skip for now \n");
+  }
+
   // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
@@ -71,12 +79,12 @@ class Line extends Shape {
         // より水平な線の場合
         if (dx.abs() > dy.abs()) {
             for (var i = 0; i <= steps; i++) {
-            for (int j = 1; j <= thickness / 2; j++) {
-                drawPixel(size, pixels, x, y + j, 1.0); // 上方向にコピー
-                drawPixel(size, pixels, x, y - j, 1.0); // 下方向にコピー
-            }
-            x += dx;
-            y += dy;
+                for (int j = 1; j <= thickness / 2; j++) {
+                    drawPixel(size, pixels, x, y + j, 1.0); // 上方向にコピー
+                    drawPixel(size, pixels, x, y - j, 1.0); // 下方向にコピー
+                }
+                x += dx;
+                y += dy;
             }
         }
         // より垂直な線の場合
@@ -102,6 +110,8 @@ class Line extends Shape {
         double y1 = end_dy;
 
         final steep = (y1 - y0).abs() > (x1 - x0).abs();
+
+        // vertical => consider x as y, y as x
         if (steep) {
             double temp;
             temp = x0;
@@ -111,7 +121,8 @@ class Line extends Shape {
             x1 = y1;
             y1 = temp;
         }
-
+        
+        // swap x0 and x1
         if (x0 > x1) {
             double temp;
             temp = x0;
@@ -126,28 +137,26 @@ class Line extends Shape {
         double dy = y1 - y0;
         double gradient = dy / dx;
 
+        // vertical line
         if (dx == 0.0) {
             gradient = 1.0;
         }
 
         double xEnd = x0.roundToDouble();
         double yEnd = y0 + gradient * (xEnd - x0);
-        double xGap = 1 - (x0 + 0.5).remainder(1);
+        double xGap = 1 - (x0 + 0.5).remainder(1); // xGap は、直線の始点 (x0, y0) または終点 (x1, y1) がどの程度ピクセルの中心からずれているかを示す
 
         double xPixel1 = xEnd;
         double yPixel1 = yEnd.floorToDouble();
 
         if (steep) {
-        antiAliased_drawPixel(
-            size, pixels, yPixel1, xPixel1, xGap * (yEnd - yPixel1).remainder(1));
-        antiAliased_drawPixel(size, pixels, yPixel1 + 1, xPixel1,
-            xGap * (1 - (yEnd - yPixel1).remainder(1)));
+            antiAliased_drawPixel(size, pixels, yPixel1, xPixel1, xGap * (yEnd - yPixel1).remainder(1));
+            antiAliased_drawPixel(size, pixels, yPixel1 + 1, xPixel1, xGap * (1 - (yEnd - yPixel1).remainder(1)));
         } else {
-        antiAliased_drawPixel(
-            size, pixels, xPixel1, yPixel1, xGap * (yEnd - yPixel1).remainder(1));
-        antiAliased_drawPixel(size, pixels, xPixel1, yPixel1 + 1,
-            xGap * (1 - (yEnd - yPixel1).remainder(1)));
+            antiAliased_drawPixel(size, pixels, xPixel1, yPixel1, xGap * (yEnd - yPixel1).remainder(1));
+            antiAliased_drawPixel(size, pixels, xPixel1, yPixel1 + 1, xGap * (1 - (yEnd - yPixel1).remainder(1)));
         }
+        
 
         double interY = yEnd + gradient;
 
@@ -157,33 +166,27 @@ class Line extends Shape {
 
         double xPixel2 = xEnd;
         double yPixel2 = yEnd.floorToDouble();
-
+        
+        // from end point to start point 
         if (steep) {
-        antiAliased_drawPixel(
-            size, pixels, yPixel2, xPixel2, xGap * (yEnd - yPixel2).remainder(1));
-        antiAliased_drawPixel(size, pixels, yPixel2 + 1, xPixel2,
-            xGap * (1 - (yEnd - yPixel2).remainder(1)));
+            antiAliased_drawPixel(size, pixels, yPixel2, xPixel2, xGap * (yEnd - yPixel2).remainder(1));
+            antiAliased_drawPixel(size, pixels, yPixel2 + 1, xPixel2, xGap * (1 - (yEnd - yPixel2).remainder(1)));
         } else {
-        antiAliased_drawPixel(
-            size, pixels, xPixel2, yPixel2, xGap * (yEnd - yPixel2).remainder(1));
-        antiAliased_drawPixel(size, pixels, xPixel2, yPixel2 + 1,
-            xGap * (1 - (yEnd - yPixel2).remainder(1)));
+            antiAliased_drawPixel(size, pixels, xPixel2, yPixel2, xGap * (yEnd - yPixel2).remainder(1));
+            antiAliased_drawPixel(size, pixels, xPixel2, yPixel2 + 1, xGap * (1 - (yEnd - yPixel2).remainder(1)));
         }
 
+        
         if (steep) {
-        for (double x = xPixel1 + 1; x < xPixel2; x++) {
-            antiAliased_drawPixel(
-                size, pixels, interY.floorToDouble(), x, 1 - interY.remainder(1));
-            antiAliased_drawPixel(
-                size, pixels, interY.floorToDouble() + 1, x, interY.remainder(1));
-            interY += gradient;
-        }
+            for (double x = xPixel1 + 1; x < xPixel2; x++) {
+                antiAliased_drawPixel(size, pixels, interY.floorToDouble(), x, 1 - interY.remainder(1));
+                antiAliased_drawPixel(size, pixels, interY.floorToDouble() + 1, x, interY.remainder(1));
+                interY += gradient;
+            }
         } else {
             for (double x = xPixel1 + 1; x < xPixel2; x++) {
-                antiAliased_drawPixel(
-                    size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
-                antiAliased_drawPixel(
-                    size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
+                antiAliased_drawPixel(size, pixels, x, interY.floorToDouble(), 1 - interY.remainder(1));
+                antiAliased_drawPixel(size, pixels, x, interY.floorToDouble() + 1, interY.remainder(1));
                 interY += gradient;
             }
         }
@@ -212,11 +215,13 @@ class Line extends Shape {
     void antiAliased_drawPixel(Size size, Uint8List pixels, double x, double y, double c) {
 
         int radius = this.thickness ~/ 2; // 半径を太さから計算
+        // 描画すべきピクセルの範囲を決定
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dy = -radius; dy <= radius; dy++) {
                 if (dx * dx + dy * dy <= radius * radius) { // 円形パターンの計算
                     int nx = x.floor() + dx;
                     int ny = y.floor() + dy;
+                    // 各ピクセルが円の内部に含まれるかどうかを判定
                     if (nx >= 0 && nx < size.width && ny >= 0 && ny < size.height) { // 範囲チェック
                         final index = (nx + ny * size.width).toInt() * 4;
                         if (index >= 0 && index < pixels.length - 4) {

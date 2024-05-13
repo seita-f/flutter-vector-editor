@@ -12,6 +12,7 @@ class Polygon extends Shape {
 
   // final List<Point> all_points = [];
   late List<Point> all_points;
+  late List<Line> lines = []; 
   bool closed = false;
   
   Polygon(List<Point> all_points, int thickness, Color color, int id) : super(all_points, thickness, color, id)
@@ -57,7 +58,6 @@ class Polygon extends Shape {
     }
   }
 
-
   void drawEdge(Point point1, Point point2, Uint8List pixels, ui.Size size, bool isAntiAliased) {
 
     List<Point> linePoints = [
@@ -66,6 +66,12 @@ class Polygon extends Shape {
     ];
     final line = Line(linePoints, thickness, color, -10); // id
     line.draw(pixels, size, isAntiAliased: isAntiAliased);
+  }
+
+  @override
+  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
+    // updateLines(color, thickness);
+    print("polygon moving vertex is called \n");
   }
 
   double calc_distance(Point point1, Point point2){
@@ -78,6 +84,28 @@ class Polygon extends Shape {
     print("isClosed distance: $distance");
     return distance <= 17;
   }
+
+  //------- Edit graph -------
+  @override
+  bool contains(Point touchedPoints) {
+
+      for (var i = 0; i < this.all_points.length - 1; i++) {
+        final distance = (all_points[i+1]-all_points[i]).distance;
+        final distance1 = (touchedPoints - all_points[i]).distance;
+        final distance2 = (touchedPoints - all_points[i+1]).distance;
+        if((distance1 + distance2 - distance).abs() < 5){
+          return true;
+        }
+      }
+      return false;
+  }
+
+  //------ Moving Vertex -----
+  // @override
+  // void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
+  //   updateLines(color, thickness);
+  //   print("polygon moving vertex is called \n");
+  // }
 
   //------ File Manager ------
   static Shape? fromJson(Map<String, dynamic> json) {
@@ -111,11 +139,6 @@ class Polygon extends Shape {
       'thickness': thickness,
       'color': color.value,
     };
-  }
-
-  @override
-  bool contains(Point tappedPoint) {
-    return false;
   }
 
   void drawPixel(Uint8List pixels, ui.Size size, Point point, ui.Color color) {

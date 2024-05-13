@@ -57,7 +57,7 @@ class Circle extends Shape {
     print("Midpoint_circle() is called! \n");
     int dE = 3;
     int dSE = 5 - 2 * radius;
-    int d = 1 - radius;
+    int d = 1 - radius; // decision parameter
     int x = 0;
     int y = radius;
 
@@ -98,6 +98,8 @@ class Circle extends Shape {
     drawPixel(pixels, size, y.round(), x.round());
     drawPixel(pixels, size, -x.round(), y.round());
     drawPixel(pixels, size, -y.round(), -x.round());
+
+    // 各ピクセルの位置に応じてアルファ値を計算
     while (x > y) {
       y++;
       x = sqrt(radius * radius - y * y).ceilToDouble();
@@ -110,7 +112,7 @@ class Circle extends Shape {
     final dx = x.round();
     final dy = y.round();
     print(1-alpha);
-    drawPixel(pixels, size, dx, dy, alpha: (1 - alpha));
+    drawPixel(pixels, size, dx, dy, alpha: (1 - alpha)); 
     drawPixel(pixels, size, dx - 1, dy, alpha: alpha);
     drawPixel(pixels, size, dy, dx, alpha: (1 - alpha));
     drawPixel(pixels, size, dy, dx - 1, alpha: alpha);
@@ -127,7 +129,7 @@ class Circle extends Shape {
     drawPixel(pixels, size, -dy, -dx, alpha: (1 - alpha));
     drawPixel(pixels, size, -dy, -dx + 1, alpha: alpha);
   }
-
+  
   void drawPixel(Uint8List pixels, ui.Size size, int i, int j,{var alpha = 1.0}) {
 
     final x = (start_dx + i).toInt();
@@ -138,16 +140,17 @@ class Circle extends Shape {
 
     if (!full) {
       double angle = atan2(j.toDouble(), i.toDouble());
-      if (startAngle < 0) startAngle += 2 * pi;
-      if (startAngle > endAngle) endAngle += 2 * pi;
+      if (startAngle < 0) startAngle += 2 * pi;  // start angleが負の値の場合、正の値に補正
+      if (startAngle > endAngle) endAngle += 2 * pi; // 円弧の終了角度が開始角度よりも小さい場合、endAngle にも同様に 2 * pi を加えて正の値に補正
 
-      if (angle < 0) angle += 2 * pi;
+      // if (angle < 0) angle += 2 * pi;
       if ((angle < startAngle || angle > endAngle) &&
           (angle + 2 * pi < startAngle || angle + 2 * pi > endAngle)) return;
     }
 
-    if (x >= 0 && x < width && y >= 0 && y < height) {
-      final index = (x + y * width) * 4;
+    // check if given (x,y) is within the screen size
+    if (x >= 0 && x < width && y >= 0 && y < height) {  
+      final index = (x + y * width) * 4; // 2D to 1D
 
       if (alpha != 1.0) {
 
@@ -190,6 +193,12 @@ class Circle extends Shape {
     return distance <= 20;
   }
 
+  @override
+  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness) {
+      this.color = color;
+      this.thickness = thickness;
+      print("skip for now \n");
+  }
 
   //------ File Manager ------
   @override
