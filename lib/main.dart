@@ -201,6 +201,11 @@ class _MyHomePageState extends State<MyHomePage> {
             polygonPoints.clear();
           }
         }
+        else if(drawingRectangle){
+          shapes.add(Rectangle(points, currentThickness.toInt(), currentColor, id));
+          id += 1;
+          points.clear();
+        }
       }
       else{ // edit mode
 

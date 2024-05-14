@@ -180,6 +180,7 @@ class Circle extends Shape {
 
   @override
   bool isCenterPoint(Point tappedPoint){
+
     Point start = Point(this.start_dx, this.start_dy);
 
     // Calculate the distance from the tapped point to the start point
