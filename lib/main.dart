@@ -13,6 +13,7 @@ import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
 import 'shape/polygon.dart';
+import 'shape/rectangle.dart';
 import 'fileManager.dart';
 
 void main() {
@@ -64,6 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool drawingLine = true; // defualt
   bool drawingPolygon = false;
   bool drawingCircle = false;
+  bool drawingRectangle = false;
   bool antiAliased = false;
   
   // Flag for editing
@@ -202,6 +204,11 @@ class _MyHomePageState extends State<MyHomePage> {
             id += 1;
             polygonPoints.clear();
           }
+        }
+        else if(drawingRectangle){
+          shapes.add(Rectangle(points, currentThickness.toInt(), currentColor, id));
+          id += 1;
+          points.clear();
         }
       }
       else{ // edit mode
@@ -464,13 +471,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               
                               // Shape Selector Icons
-                              ...['Line', 'Circle', 'Polygon'].map((shape) => InkWell(
+                              ...['Line', 'Circle', 'Polygon', 'Rectangle'].map((shape) => InkWell(
                                 onTap: () {
                                   setState(() {
                                     shapeType = shape;
                                     drawingLine = shape == 'Line';
                                     drawingCircle = shape == 'Circle';
                                     drawingPolygon = shape == 'Polygon';
+                                    drawingRectangle = shape == 'Rectangle';
                                     shape_edit = false;
                                   });
                                 },
@@ -486,85 +494,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                   child: Icon(
                                     shape == 'Line' ? Icons.line_weight :
                                     shape == 'Circle' ? Icons.radio_button_unchecked :
-                                    Icons.change_history,
+                                    shape == 'Polygon' ? Icons.change_history :
+                                    Icons.crop_square,  // Icon for Rectangle
                                     color: shapeType == shape ? Colors.blue : Colors.black,
+                                    // Icons.change_history,
+                                    // color: shapeType == shape ? Colors.blue : Colors.black,
                                   ),
                                 ),
                               )),
                             ],
                           ),
-                          // // ----- DRAWING BOARD -----
-                          // Wrap(
-                          //   children: colors.map((color) => Padding(
-                          //     padding: const EdgeInsets.all(8.0),
-                          //     child: InkWell(
-                          //       onTap: () {
-                          //         print(currentColor);
-                          //         print(currentThickness);
-                          //         setState(() {
-                          //           currentColor = color;
-                          //         });
-                          //       },
-                          //       child: Container(
-                          //         width: 36,
-                          //         height: 36,
-                          //         decoration: BoxDecoration(
-                          //           color: color,
-                          //           shape: BoxShape.circle,
-                          //         ),
-                          //         alignment: Alignment.center,
-                          //         child: currentColor == color
-                          //             ? Icon(Icons.check, size: 18, color: Colors.white)
-                          //             : Container(),
-                          //       ),
-                          //     ),
-                          //   )).toList(),
-                          // ),
-                          // // ----- THICKNESS -----
-                          // Slider(
-                          //   value: currentThickness,
-                          //   min: 1.0,
-                          //   max: 10.0,
-                          //   divisions: 9,
-                          //   label: currentThickness.round.toString(),
-                          //   onChanged: (double value) {
-                          //     setState(() {
-                          //       currentThickness = value;
-                          //     });
-                          //   },
-                          // ),
-                          // // ----- SHAPE SELECT -----
-                          // ToggleButtons(
-                          //   children: <Widget>[
-                          //     Icon(Icons.line_weight), // Line icon
-                          //     Icon(Icons.radio_button_unchecked), // Circle icon
-                          //     Icon(Icons.change_history), // Triangle icon
-                          //   ],
-                          //   isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon'],
-                          //   onPressed: (int index) {
-                          //     setState(() {
-                          //       shapeType = ['Line', 'Circle', 'Polygon',][index];
-                          //       if(shapeType == 'Line'){ 
-                          //         drawingLine = true; 
-                          //         drawingCircle = false; 
-                          //         drawingPolygon = false;
-                          //         shape_edit = false;
-                          //       }
-                          //       if(shapeType == 'Circle'){ 
-                          //         drawingLine = false; 
-                          //         drawingCircle = true; 
-                          //         drawingPolygon = false;
-                          //         shape_edit = false;
-                          //       }
-                          //       if(shapeType == 'Polygon')
-                          //       { drawingLine = false; 
-                          //         drawingCircle = false; 
-                          //         drawingPolygon = true;
-                          //         shape_edit = false;
-                          //       }
-                          //     });
-                          //   },
-                          // ),
                           Row(
                             children: [
                               // ------ Edit button -----
@@ -580,6 +519,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       drawingLine = false; 
                                       drawingCircle = false; 
                                       drawingPolygon = false;
+                                      drawingRectangle = false;
                                       print("shape_edit clicked! $shape_edit");
                                     });
                                   },
