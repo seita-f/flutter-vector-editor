@@ -225,27 +225,6 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         else if(movingLocation == true){ // moving start point
 
-            // if(selectedShape?.radius != null)  // moving circle
-            // {
-            //   int? original_radius = selectedShape?.radius;   // keep original radius
-
-            //   selectedShape?.start_dx = details.localPosition.dx;
-            //   selectedShape?.start_dy = details.localPosition.dy;
-            //   selectedShape?.color = currentColor;
-            //   selectedShape?.thickness = currentThickness.toInt();
-
-            //   if (original_radius != null) {
-            //     selectedShape!.radius = original_radius;
-            //   }
-            //   print("moving start-point!! \n");
-            //   for (var shape in shapes) {
-            //     if (selectedShape?.getId() == shape.getId()) {
-            //       if (selectedShape != null) {
-            //         shape = selectedShape!;
-            //       }               
-            //     }
-            //   }  
-            // } 
             print("moving shape called!\n");
             for (var shape in shapes) {
               if (selectedShape?.getId() == shape.getId()) {
@@ -441,14 +420,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // ----- DRAWING BOARD -----
+                          // ----- COLOR PALETTE, THICKNESS SLIDER, SHAPE SELECT ALL IN ONE ROW -----
                           Wrap(
-                            children: colors.map((color) => Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
+                            spacing: 8.0,  // Horizontal space between the children
+                            runSpacing: 4.0,  // Vertical space between the lines
+                            children: [
+                              // Color Palette
+                              ...colors.map((color) => InkWell(
                                 onTap: () {
-                                  print(currentColor);
-                                  print(currentThickness);
                                   setState(() {
                                     currentColor = color;
                                   });
@@ -459,60 +438,133 @@ class _MyHomePageState extends State<MyHomePage> {
                                   decoration: BoxDecoration(
                                     color: color,
                                     shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: currentColor == color ? Colors.black : Colors.transparent,
+                                      width: 2
+                                    )
                                   ),
-                                  alignment: Alignment.center,
-                                  child: currentColor == color
-                                      ? Icon(Icons.check, size: 18, color: Colors.white)
-                                      : Container(),
+                                ),
+                              )).toList(),
+                              
+                              // Thickness Slider
+                              Container(
+                                width: 300,  // Fixed width for the slider
+                                child: Slider(
+                                  value: currentThickness,
+                                  min: 1.0,
+                                  max: 10.0,
+                                  divisions: 9,
+                                  label: currentThickness.round().toString(),
+                                  onChanged: (double value) {
+                                    setState(() {
+                                      currentThickness = value;
+                                    });
+                                  },
                                 ),
                               ),
-                            )).toList(),
-                          ),
-                          // ----- THICKNESS -----
-                          Slider(
-                            value: currentThickness,
-                            min: 1.0,
-                            max: 10.0,
-                            divisions: 9,
-                            label: currentThickness.round.toString(),
-                            onChanged: (double value) {
-                              setState(() {
-                                currentThickness = value;
-                              });
-                            },
-                          ),
-                          // ----- SHAPE SELECT -----
-                          ToggleButtons(
-                            children: <Widget>[
-                              Icon(Icons.line_weight), // Line icon
-                              Icon(Icons.radio_button_unchecked), // Circle icon
-                              Icon(Icons.change_history), // Triangle icon
+                              
+                              // Shape Selector Icons
+                              ...['Line', 'Circle', 'Polygon'].map((shape) => InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    shapeType = shape;
+                                    drawingLine = shape == 'Line';
+                                    drawingCircle = shape == 'Circle';
+                                    drawingPolygon = shape == 'Polygon';
+                                    shape_edit = false;
+                                  });
+                                },
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: shapeType == shape ? Colors.black : Colors.grey,
+                                      width: 2
+                                    )
+                                  ),
+                                  child: Icon(
+                                    shape == 'Line' ? Icons.line_weight :
+                                    shape == 'Circle' ? Icons.radio_button_unchecked :
+                                    Icons.change_history,
+                                    color: shapeType == shape ? Colors.blue : Colors.black,
+                                  ),
+                                ),
+                              )),
                             ],
-                            isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon'],
-                            onPressed: (int index) {
-                              setState(() {
-                                shapeType = ['Line', 'Circle', 'Polygon',][index];
-                                if(shapeType == 'Line'){ 
-                                  drawingLine = true; 
-                                  drawingCircle = false; 
-                                  drawingPolygon = false;
-                                  shape_edit = false;
-                                }
-                                if(shapeType == 'Circle'){ 
-                                  drawingLine = false; 
-                                  drawingCircle = true; 
-                                  drawingPolygon = false;
-                                  shape_edit = false;
-                                }
-                                if(shapeType == 'Polygon')
-                                { drawingLine = false; 
-                                  drawingCircle = false; 
-                                  drawingPolygon = true;
-                                  shape_edit = false;
-                                }
-                              });
-                            },
                           ),
+                          // // ----- DRAWING BOARD -----
+                          // Wrap(
+                          //   children: colors.map((color) => Padding(
+                          //     padding: const EdgeInsets.all(8.0),
+                          //     child: InkWell(
+                          //       onTap: () {
+                          //         print(currentColor);
+                          //         print(currentThickness);
+                          //         setState(() {
+                          //           currentColor = color;
+                          //         });
+                          //       },
+                          //       child: Container(
+                          //         width: 36,
+                          //         height: 36,
+                          //         decoration: BoxDecoration(
+                          //           color: color,
+                          //           shape: BoxShape.circle,
+                          //         ),
+                          //         alignment: Alignment.center,
+                          //         child: currentColor == color
+                          //             ? Icon(Icons.check, size: 18, color: Colors.white)
+                          //             : Container(),
+                          //       ),
+                          //     ),
+                          //   )).toList(),
+                          // ),
+                          // // ----- THICKNESS -----
+                          // Slider(
+                          //   value: currentThickness,
+                          //   min: 1.0,
+                          //   max: 10.0,
+                          //   divisions: 9,
+                          //   label: currentThickness.round.toString(),
+                          //   onChanged: (double value) {
+                          //     setState(() {
+                          //       currentThickness = value;
+                          //     });
+                          //   },
+                          // ),
+                          // // ----- SHAPE SELECT -----
+                          // ToggleButtons(
+                          //   children: <Widget>[
+                          //     Icon(Icons.line_weight), // Line icon
+                          //     Icon(Icons.radio_button_unchecked), // Circle icon
+                          //     Icon(Icons.change_history), // Triangle icon
+                          //   ],
+                          //   isSelected: [shapeType == 'Line', shapeType == 'Circle', shapeType == 'Polygon'],
+                          //   onPressed: (int index) {
+                          //     setState(() {
+                          //       shapeType = ['Line', 'Circle', 'Polygon',][index];
+                          //       if(shapeType == 'Line'){ 
+                          //         drawingLine = true; 
+                          //         drawingCircle = false; 
+                          //         drawingPolygon = false;
+                          //         shape_edit = false;
+                          //       }
+                          //       if(shapeType == 'Circle'){ 
+                          //         drawingLine = false; 
+                          //         drawingCircle = true; 
+                          //         drawingPolygon = false;
+                          //         shape_edit = false;
+                          //       }
+                          //       if(shapeType == 'Polygon')
+                          //       { drawingLine = false; 
+                          //         drawingCircle = false; 
+                          //         drawingPolygon = true;
+                          //         shape_edit = false;
+                          //       }
+                          //     });
+                          //   },
+                          // ),
                           Row(
                             children: [
                               // ------ Edit button -----
@@ -533,24 +585,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                 ),
                               ),
-                              // ----- Number selection dropdown -----
-                              // Expanded(
-                              //   child: DropdownButton<int>(
-                              //     value: n_circle,
-                              //     onChanged: (int? newValue) {
-                              //       setState(() {
-                              //         n_circle = newValue!;
-                              //         print("N: $n_circle \n");
-                              //       });
-                              //     },
-                              //     items: List.generate(5, (index) {
-                              //       return DropdownMenuItem<int>(
-                              //         value: index + 1,
-                              //         child: Text('${index + 1}'),
-                              //       );
-                              //     }),
-                              //   ),
-                              // ),
                               // ----- DELETE ALL -----
                               Expanded(
                                 child: TextButton.icon(
