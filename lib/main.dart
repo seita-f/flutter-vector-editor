@@ -112,11 +112,11 @@ class _MyHomePageState extends State<MyHomePage> {
         previousToppedPosition = Point(details.localPosition.dx, details.localPosition.dy); // get the clicked location
 
         if (selectedShape != null) {
-            if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == false)) {   
+            if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isCenterPoint(previousToppedPosition) == false)) {   
               movingVertex = true;
               movingLocation = false;
               print("moving vertex is true\n");
-            }else if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isStartPoint(previousToppedPosition) == true)) {
+            }else if ((selectedShape?.contains(previousToppedPosition) == true) && (selectedShape?.isCenterPoint(previousToppedPosition) == true)) {
               movingLocation = true;
               movingVertex == false;
               print("moving location is true\n");
@@ -202,62 +202,56 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else{ // edit mode
 
+        Point newPoint = Point(details.localPosition.dx, details.localPosition.dy);
+
         if(movingVertex == true) { // moving end point
           
-            Point newPoint = Point(details.localPosition.dx, details.localPosition.dy);
-            
-            // Point original = //   selectedShape?.end_dx = details.localPosition.dx;
-            //   selectedShape?.end_dy = details.localPosition.dy;
-
-            // if(selectedShape?.radius != null)
-            // {
-            //   selectedShape?.end_dx = details.localPosition.dx;
-            //   selectedShape?.end_dy = details.localPosition.dy;
-            //   int? updated_radius = (sqrt(pow((details.localPosition.dx - selectedShape?.start_dx), 2) + pow((details.localPosition.dy - selectedShape?.start_dy), 2) )).toInt();
-
-            //   selectedShape?.color = currentColor;
-            //   selectedShape?.thickness = currentThickness.toInt();
-
-            //   if (updated_radius != null) {
-            //     selectedShape!.radius = updated_radius;
-            //   }
-
-              print("moving-end point called!\n");
-              for (var shape in shapes) {
-                if (selectedShape?.getId() == shape.getId()) {
-                  if (selectedShape != null) {
-                    // shape = selectedShape!;
-                    shape.movingVertex(previousToppedPosition, newPoint, currentColor, currentThickness.toInt());
-                  }               
-                }
+            print("moving-end point called!\n");
+            for (var shape in shapes) {
+              if (selectedShape?.getId() == shape.getId()) {
+                if (selectedShape != null) {
+                  // shape = selectedShape!;
+                  shape.movingVertex(previousToppedPosition, newPoint, currentColor, currentThickness.toInt());
+                }               
               }
+            }
             
             movingVertex = false;
             movingLocation = false;
         }
         else if(movingLocation == true){ // moving start point
 
-            if(selectedShape?.radius != null)  // moving circle
-            {
-              int? original_radius = selectedShape?.radius;   // keep original radius
+            // if(selectedShape?.radius != null)  // moving circle
+            // {
+            //   int? original_radius = selectedShape?.radius;   // keep original radius
 
-              selectedShape?.start_dx = details.localPosition.dx;
-              selectedShape?.start_dy = details.localPosition.dy;
-              selectedShape?.color = currentColor;
-              selectedShape?.thickness = currentThickness.toInt();
+            //   selectedShape?.start_dx = details.localPosition.dx;
+            //   selectedShape?.start_dy = details.localPosition.dy;
+            //   selectedShape?.color = currentColor;
+            //   selectedShape?.thickness = currentThickness.toInt();
 
-              if (original_radius != null) {
-                selectedShape!.radius = original_radius;
+            //   if (original_radius != null) {
+            //     selectedShape!.radius = original_radius;
+            //   }
+            //   print("moving start-point!! \n");
+            //   for (var shape in shapes) {
+            //     if (selectedShape?.getId() == shape.getId()) {
+            //       if (selectedShape != null) {
+            //         shape = selectedShape!;
+            //       }               
+            //     }
+            //   }  
+            // } 
+            print("moving shape called!\n");
+            for (var shape in shapes) {
+              if (selectedShape?.getId() == shape.getId()) {
+                if (selectedShape != null) {
+                  // shape = selectedShape!;
+                  shape.movingShape(previousToppedPosition, newPoint, currentColor, currentThickness.toInt());
+                }               
               }
-              print("moving start-point!! \n");
-              for (var shape in shapes) {
-                if (selectedShape?.getId() == shape.getId()) {
-                  if (selectedShape != null) {
-                    shape = selectedShape!;
-                  }               
-                }
-              }  
-            } 
+            }
+
             movingVertex = false;
             movingLocation = false;
         }

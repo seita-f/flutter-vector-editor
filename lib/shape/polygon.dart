@@ -38,14 +38,6 @@ class Polygon extends Shape {
     }
 
     for (var i = 0; i < all_points.length - 1; i++) {
-      // final point1;
-      // if(all_points.length == 2){
-      //   point1 = all_points[0];
-      // }
-      // else{
-      //   // Let start point be the prev last end point
-      //   point1 = all_points[i-1];
-      // }
       final point1 = all_points[i];
       final point2 = all_points[i + 1];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
@@ -78,7 +70,7 @@ class Polygon extends Shape {
 
     this.color = color;
     this.thickness = thickness;
-    
+
     for (var i = 0; i < this.all_points.length -1; i++) {
       final distance = (all_points[i+1]-all_points[i]).distance;
         final distance1 = (originalPoint - all_points[i]).distance;
@@ -101,10 +93,52 @@ class Polygon extends Shape {
     return distance <= 17;
   }
 
+  @override
+  bool isCenterPoint(Point tappedPoint){ 
+    print("isCenterPoint is called!!!!!!!!!!!!!!!!\n");
+    // for moving polygone (supposed inside the graph clicked)
+    int crossings = 0;
+    for (int i = 0; i < all_points.length; i++) {
+      int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
+      Point point1 = all_points[i];
+      Point point2 = all_points[next];
+
+      // Check if the line from point1 to point2 crosses the line from tappedPoint horizontally
+      if (((point1.dy > tappedPoint.dy) != (point2.dy > tappedPoint.dy)) &&
+          (tappedPoint.dx < (point2.dx - point1.dx) * (tappedPoint.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
+        crossings++;
+      }
+    }
+
+    // If the number of crossings is odd, the point is inside the polygon
+    print('is it the center point? : ${crossings % 2}\n');
+    return (crossings % 2 != 0);
+  }
+
+  @override
+  void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
+    // Calculate the differences in x and y directions
+    double dx = newPoint.dx - originalPoint.dx;
+    double dy = newPoint.dy - originalPoint.dy;
+
+    // Update color and thickness properties
+    this.color = color;
+    this.thickness = thickness;
+
+    // Move all points by the calculated differences
+    for (int i = 0; i < all_points.length; i++) {
+      Point currentPoint = all_points[i];
+      all_points[i] = Point(currentPoint.dx + dx, currentPoint.dy + dy);
+    }
+
+    print("Polygon moved to new position");
+  }
+
   //------- Edit graph -------
   @override
   bool contains(Point touchedPoints) {
 
+      // check if the click point is on vertex
       for (var i = 0; i < this.all_points.length - 1; i++) {
         final distance = (all_points[i+1]-all_points[i]).distance;
         final distance1 = (touchedPoints - all_points[i]).distance;
@@ -113,15 +147,27 @@ class Polygon extends Shape {
           return true;
         }
       }
-      return false;
-  }
 
-  //------ Moving Vertex -----
-  // @override
-  // void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
-  //   updateLines(color, thickness);
-  //   print("polygon moving vertex is called \n");
-  // }
+      // check if the click point is inside the shape
+      int crossings = 0;
+      for (int i = 0; i < all_points.length; i++) {
+        int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
+        Point point1 = all_points[i];
+        Point point2 = all_points[next];
+
+        // Check if the line from point1 to point2 crosses the line from tappedPoint horizontally
+        if (((point1.dy > touchedPoints.dy) != (point2.dy > touchedPoints.dy)) &&
+            (touchedPoints.dx < (point2.dx - point1.dx) * (touchedPoints.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
+          crossings++;
+        }
+      }
+
+      // If the number of crossings is odd, the point is inside the polygon
+      print('is it the center point? : ${crossings % 2}\n');
+      return (crossings % 2 != 0);
+
+      // return false;
+  }
 
   //------ File Manager ------
   static Shape? fromJson(Map<String, dynamic> json) {

@@ -30,6 +30,11 @@ class Line extends Shape {
       this.end_dy = newPoint.dy;
   }
 
+  @override
+  void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
+      // pass
+  }
+
   // DDA Algorithm for line drawing
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {

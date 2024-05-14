@@ -26,10 +26,6 @@ class Circle extends Shape {
     this.end_dy = points[1].dy;
     this.id = id;
     this.radius = (sqrt(pow((end_dx - start_dx), 2) + pow((end_dy - start_dy), 2) )).toInt();
-    // this.startAngle = 0;
-    // this.endAngle = 2 * pi;
-    // this.relativeStartAngle = 0;
-    // this.full = true;
   }
  
   @override
@@ -183,7 +179,7 @@ class Circle extends Shape {
   }
 
   @override
-  bool isStartPoint(Point tappedPoint){
+  bool isCenterPoint(Point tappedPoint){
     Point start = Point(this.start_dx, this.start_dy);
 
     // Calculate the distance from the tapped point to the start point
@@ -195,12 +191,25 @@ class Circle extends Shape {
 
   @override
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness) {
+      // keep start point & change radius size
       this.color = color;
       this.thickness = thickness;
       this.color = color;
 
       int new_radius = (sqrt(pow((newPoint.dx - start_dx), 2) + pow((newPoint.dy - start_dy), 2) )).toInt();
       this.radius = new_radius;
+  }
+
+  @override
+  void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
+      // change start point & keep radius size
+      this.color = color;
+      this.thickness = thickness;
+      this.color = color;
+
+      this.start_dx = newPoint.dx;
+      this.start_dy = newPoint.dy;
+      this.radius = this.radius;
   }
 
   //------ File Manager ------
