@@ -50,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Colors.yellow,
     Colors.orange,
     Colors.purple,
+    Color(0xFFF5F5F5), // background color to reset the fill color
   ];
 
   String shapeType = 'Line'; // Default shape
@@ -57,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Properties
   double currentThickness = 4;
   Color currentColor = Colors.black;  // default
+  Color currentFillColor = Color(0xFFF5F5F5); // dafault
   Color canvasColor = Color(0xFFF5F5F5);
   int id = 0;
   int n_circle = 1; // default
@@ -91,6 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentShapeIndex = -1;
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
+
 
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
@@ -424,12 +427,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           // ----- COLOR PALETTE, THICKNESS SLIDER, SHAPE SELECT ALL IN ONE ROW -----
                           Wrap(
-                            spacing: 8.0,  // Horizontal space between the children
-                            runSpacing: 4.0,  // Vertical space between the lines
+                            spacing: 8.0, // Horizontal space between the children
+                            runSpacing: 4.0, // Vertical space between the lines
                             children: [
                               // Color Palette
-                              ...colors.map((color) => InkWell(
-                                onTap: () {
+                              PopupMenuButton<Color>(
+                                initialValue: currentColor,
+                                onSelected: (Color color) {
                                   setState(() {
                                     currentColor = color;
                                   });
@@ -438,15 +442,34 @@ class _MyHomePageState extends State<MyHomePage> {
                                   width: 36,
                                   height: 36,
                                   decoration: BoxDecoration(
-                                    color: color,
+                                    color: currentColor,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: currentColor == color ? Colors.black : Colors.transparent,
-                                      width: 2
-                                    )
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
-                              )).toList(),
+                                itemBuilder: (BuildContext context) {
+                                  return colors.map((Color color) {
+                                    return PopupMenuItem<Color>(
+                                      value: color,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: currentColor == color ? Colors.black : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                              ),
                               
                               // Thickness Slider
                               Container(
@@ -497,6 +520,60 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ),
                               )),
+
+                              // Adding space
+                              SizedBox(width: 10.0),
+                              // Label "Fill Color"
+                              Text('Fill Color:'),
+                              
+                              // Color Palette for fill color
+                              PopupMenuButton<Color>(
+                                initialValue: currentFillColor,
+                                onSelected: (Color color) {
+                                  setState(() {
+                                    currentFillColor = color;
+                                  });
+                                },
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: currentFillColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                itemBuilder: (BuildContext context) {
+                                  return colors.map((Color color) {
+                                    return PopupMenuItem<Color>(
+                                      value: color,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: currentFillColor == color ? Colors.black : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                              ),
+                              
+                              // Fill with image button
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Implement functionality to fill the shape with an image
+                                },
+                                child: Text('Fill with Image'),
+                              ),
                             ],
                           ),
                           Row(
