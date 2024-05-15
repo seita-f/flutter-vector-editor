@@ -15,7 +15,10 @@ class Polygon extends Shape {
   late List<Line> lines = []; 
   bool closed = false;
   
-  Polygon(List<Point> all_points, int thickness, Color color, int id) : super(all_points, thickness, color, id)
+  Color? fillColor;
+  // ImageData? fillImage;
+
+  Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id)
   {
     print("----- Polygon obj -----");
     // print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
@@ -26,8 +29,9 @@ class Polygon extends Shape {
       print("end: (${this.all_points[i+1].dx}, ${all_points[i+1].dy})\n");
     }
 
-    closed = false;
+    this.closed = false;
     this.id = id;
+    this.fillColor = fillColor;
   }
 
   @override
@@ -47,6 +51,11 @@ class Polygon extends Shape {
       final point1 = all_points[all_points.length - 1];
       final point2 = all_points[0];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
+
+      // check filling option
+      if (fillColor != null) {
+        scanlineFill(pixels, size, (x, y) => fillColor!);
+      }
     }
   }
 
@@ -59,6 +68,107 @@ class Polygon extends Shape {
     final line = Line(linePoints, thickness, color, -10); // id
     line.draw(pixels, size, isAntiAliased: isAntiAliased);
   }
+  void scanlineFill(Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
+    List<int> sortedIndices = List<int>.generate(all_points.length, (i) => i);
+    sortedIndices.sort((a, b) {
+      int yCompare = all_points[a].dy.compareTo(all_points[b].dy);
+      return yCompare == 0 ? all_points[a].dx.compareTo(all_points[b].dx) : yCompare;
+    });
+
+    List<EdgeEntry> aet = [];
+
+    for (int y = 0; y < size.height.toInt(); y++) {
+      while (sortedIndices.isNotEmpty && all_points[sortedIndices.first].dy.toInt() == y) {
+        int currentIndex = sortedIndices.removeAt(0);
+        int prevIndex = (currentIndex - 1 + all_points.length) % all_points.length;
+        int nextIndex = (currentIndex + 1) % all_points.length;
+
+        Point currentPoint = all_points[currentIndex];
+        if (all_points[nextIndex].dy > currentPoint.dy) {
+          aet.add(createEdge(all_points[currentIndex], all_points[nextIndex]));
+        }
+        if (all_points[prevIndex].dy > currentPoint.dy) {
+          aet.add(createEdge(all_points[currentIndex], all_points[prevIndex]));
+        }
+      }
+
+      aet.removeWhere((edge) => edge.yMax.toInt() == y);
+      for (var edge in aet) {
+        edge.x += edge.dx;
+      }
+
+      aet.sort((a, b) => (a.x).compareTo(b.x));
+
+      for (int i = 0; i < aet.length; i += 2) {
+        int startX = aet[i].x.toInt();
+        int endX = aet[i + 1].x.toInt();
+        for (int x = startX; x <= endX; x++) {
+          drawPixel(pixels, size, Point(x.toDouble(), y.toDouble()), color(x, y));
+        }
+      }
+    }
+  }
+
+  EdgeEntry createEdge(Point start, Point end) {
+    double dx = (end.dx - start.dx) / (end.dy - start.dy);
+    return EdgeEntry(
+      x: start.dx,
+      yMax: end.dy,
+      dx: dx,
+    );
+  }
+  // void scanlineFill(
+  //     Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
+  //   List<int> sortedIndices = List<int>.generate(points.length, (i) => i);
+  //   sortedIndices.sort((a, b) {
+  //     int yCompare = points[a].dy.compareTo(points[b].dy);
+  //     return yCompare == 0 ? points[a].dx.compareTo(points[b].dx) : yCompare;
+  //   });
+
+  //   List<EdgeEntry> aet = [];
+
+  //   for (int y = 0; y < size.height.toInt(); y++) {
+  //     while (sortedIndices.isNotEmpty &&
+  //         points[sortedIndices.first].dy.toInt() == y) {
+  //       int currentIndex = sortedIndices.removeAt(0);
+  //       int prevIndex = (currentIndex - 1 + points.length) % points.length;
+  //       int nextIndex = (currentIndex + 1) % points.length;
+
+  //       Point currentPoint = points[currentIndex];
+  //       if (points[nextIndex].dy > currentPoint.dy) {
+  //         aet.add(createEdge(points[currentIndex], points[nextIndex]));
+  //       }
+  //       if (points[prevIndex].dy > currentPoint.dy) {
+  //         aet.add(createEdge(points[currentIndex], points[prevIndex]));
+  //       }
+  //     }
+
+  //     aet.removeWhere((edge) => edge.yMax.toInt() == y);
+  //     for (var edge in aet) {
+  //       edge.x += edge.dx;
+  //     }
+
+  //     aet.sort((a, b) => (a.x).compareTo(b.x));
+
+  //     for (int i = 0; i < aet.length; i += 2) {
+  //       int startX = aet[i].x.toInt();
+  //       int endX = aet[i + 1].x.toInt();
+  //       for (int x = startX; x <= endX; x++) {
+  //         drawPixel(
+  //             pixels, size, Point(x.toDouble(), y.toDouble()), color(x, y));
+  //       }
+  //     }
+  //   }
+  // }
+
+  // EdgeEntry createEdge(ui.Offset start, ui.Offset end) {
+  //   double dx = (end.dx - start.dx) / (end.dy - start.dy);
+  //   return EdgeEntry(
+  //     x: start.dx,
+  //     yMax: end.dy,
+  //     dx: dx,
+  //   );
+  // }
 
   @override
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
@@ -220,4 +330,17 @@ class Polygon extends Shape {
   String toString() {
     return "<${this.id}> Polygon Object: thickness ${this.thickness}, color ${this.color} \n";
   }
+}
+
+
+class EdgeEntry {
+    double x;
+    double yMax;
+    double dx;
+
+    EdgeEntry({
+      required this.x,
+      required this.yMax,
+      required this.dx,
+    });
 }

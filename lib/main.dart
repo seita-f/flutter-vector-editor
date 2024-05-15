@@ -183,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
           polygonPoints.add(offsetToPoint(details.localPosition));
 
           if(polygonPoints.length < 3){
-            shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+            shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id, currentFillColor));
           }
 
           // DEBUG
@@ -199,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
             print("###### Polygon is closed! ######\n");
             polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
             // 閉じたポリゴンをshapesリストに追加
-            shapes.add(Polygon(List.from(polygonPoints), currentThickness.toInt(), currentColor, id));
+            shapes.add(Polygon(List.from(polygonPoints), currentThickness.toInt(), currentColor, id, currentFillColor));
             id += 1;
             polygonPoints.clear();
           }
@@ -247,6 +247,21 @@ class _MyHomePageState extends State<MyHomePage> {
         shape_isSelected = false;
       }
     });
+  }
+
+  void fillWithColor() {
+    print("fill with Color clicked\n");
+
+    for (var shape in shapes) {
+      if (selectedShape?.getId() == shape.getId()) {
+        if (shape is Polygon) {
+          print("Set currentFillColor to the chosen polygon\n");
+          shape.fillColor = currentFillColor;
+        }             
+      }
+    }
+    // assign currentFillColor to the obj instance
+
   }
 
   deleteSelectedObj(){
@@ -515,8 +530,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape == 'Polygon' ? Icons.change_history :
                                     Icons.crop_square,  // Icon for Rectangle
                                     color: shapeType == shape ? Colors.blue : Colors.black,
-                                    // Icons.change_history,
-                                    // color: shapeType == shape ? Colors.blue : Colors.black,
                                   ),
                                 ),
                               )),
@@ -524,7 +537,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               // Adding space
                               SizedBox(width: 10.0),
                               // Label "Fill Color"
-                              Text('Fill Color:'),
+                              // Text('Fill Color:'),
                               
                               // Color Palette for fill color
                               PopupMenuButton<Color>(
@@ -566,7 +579,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                   }).toList();
                                 },
                               ),
-                              
+                              // Fill with image button
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Implement functionality to fill the shape with an image
+                                  fillWithColor();
+                                },
+                                child: Text('Fill with Color'),
+                              ),
                               // Fill with image button
                               ElevatedButton(
                                 onPressed: () {

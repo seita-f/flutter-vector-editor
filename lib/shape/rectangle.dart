@@ -94,12 +94,6 @@ class Rectangle extends Shape {
       this.start_dy = newPoint.dy;
   }
 
-  // filling algorithm
-  void scanlineFill(){
-     // Edge Table
-     
-  }
-
   //------ File Manager ------
   @override
   static Shape? fromJson(Map<String, dynamic> json) {
