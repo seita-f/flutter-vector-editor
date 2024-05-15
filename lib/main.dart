@@ -101,7 +101,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
 
-
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
 
@@ -408,6 +407,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Size getScreenSize(BuildContext context) {
     return MediaQuery.of(context).size;  // 画面のサイズを取得
   }
+
 
   @override
   Widget build(BuildContext context) {
