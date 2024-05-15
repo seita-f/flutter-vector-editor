@@ -3,18 +3,22 @@ import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';  // FilePicker
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:math' as math;
 
 // files
 import 'points.dart';
+import 'fileManager.dart';
+import 'image.dart';
+
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
 import 'shape/polygon.dart';
 import 'shape/rectangle.dart';
-import 'fileManager.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -77,8 +81,11 @@ class _MyHomePageState extends State<MyHomePage> {
   bool movingVertex = false;
   bool movingLocation = false;
   bool isPlygonClosed = false;
+  bool isFillColor = false;
+  bool isFillImage = false;
   Shape? selectedShape = null;
-
+  ImageData? fillImage;
+ 
   // Point
   List<Point> points = List<Point>.empty(growable: true);
   List<Point> polygonPoints = List<Point>.empty(growable: true);
@@ -249,22 +256,39 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void fillWithColor() {
-    print("fill with Color clicked\n");
+  void fillingPolygon() {
+    print("filling methods clicked\n");
 
     for (var shape in shapes) {
       if (selectedShape?.getId() == shape.getId()) {
         if (shape is Polygon) {
-          print("Set currentFillColor to the chosen polygon\n");
-          shape.fillColor = currentFillColor;
+          if(isFillColor == true){
+            print("Set currentFillColor to the chosen polygon\n");
+            shape.isFillColor = true;
+            shape.isFillImage = false;
+            shape.fillColor = currentFillColor;
+          }
+          if(isFillImage == true){
+            print("Set Image to the chosen polygon\n");
+            shape.isFillColor = false;
+            shape.isFillImage = true;
+            shape.fillImage = fillImage;
+          }
         }             
       }
     }
-    // assign currentFillColor to the obj instance
-
+  }
+  
+  void deleteAll(){
+    shapes.clear();  // Clears all shapes
+    polygonPoints.clear();
+    id = 0;
+    currentFillColor = Color(0xFFF5F5F5); // back to dafault
+    fillImage = null;
+    print("Deleted all shapes!");
   }
 
-  deleteSelectedObj(){
+  void deleteSelectedObj(){
     
     if (shape_isSelected && selectedShape != null) {
       shapes.removeWhere((shape) => shape.getId() == selectedShape!.getId());
@@ -346,6 +370,34 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     shapes = await FileManager.loadShapes(filePath);
     setState(() {});
+  }
+
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result == null) return; // Exit if no file picked
+
+    String? filePath = result.files.single.path;
+    if (filePath == null) {
+      print("No file selected.");
+      return;
+    }
+
+    final Uint8List imageData = await File(filePath).readAsBytes();
+    final Image imageFile = Image.memory(imageData);
+
+    // Get image dimensions
+    final Completer<ui.Image> completer = Completer();
+    imageFile.image.resolve(ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        completer.complete(info.image);
+      }),
+    );
+
+    final ui.Image uiImage = await completer.future;
+    setState(() {
+      fillImage = ImageData(imageData, uiImage.width, uiImage.height);
+      fillingPolygon();
+    });
   }
 
   //----- Functions -----
@@ -583,14 +635,31 @@ class _MyHomePageState extends State<MyHomePage> {
                               ElevatedButton(
                                 onPressed: () {
                                   // Implement functionality to fill the shape with an image
-                                  fillWithColor();
+                                  isFillColor = true;
+                                  isFillImage = false;
+                                  fillingPolygon();
                                 },
                                 child: Text('Fill with Color'),
                               ),
-                              // Fill with image button
+                              // I want to put small image that currently chosen. If not, empty rectangle
+                              Container(
+                                width: 35,
+                                height: 35,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: fillImage != null
+                                    ? Image.memory(
+                                        fillImage!.pixels,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Center(child: Text('X')),
+                              ),
                               ElevatedButton(
-                                onPressed: () {
-                                  // Implement functionality to fill the shape with an image
+                                onPressed: (){
+                                  isFillColor = false;
+                                  isFillImage = true;
+                                  _pickImage();
                                 },
                                 child: Text('Fill with Image'),
                               ),
@@ -625,10 +694,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   onPressed: () {
                                     // Add eraser functionality for deleting all shapes
                                     setState(() {
-                                      shapes.clear();  // Clears all shapes
-                                      polygonPoints.clear();
-                                      id = 0;
-                                      print("Deleted all shapes!");
+                                      deleteAll();
                                     });
                                   },
                                 ),

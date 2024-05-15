@@ -3,10 +3,12 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'shape.dart';
 import '../points.dart';
+import '../image.dart';
 import 'line.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:math' as math;
+
 
 class Polygon extends Shape {
 
@@ -15,8 +17,11 @@ class Polygon extends Shape {
   late List<Line> lines = []; 
   bool closed = false;
   
+  bool isFillColor = false;
+  bool isFillImage = false;
+
   Color? fillColor;
-  // ImageData? fillImage;
+  ImageData? fillImage;
 
   Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id)
   {
@@ -32,6 +37,7 @@ class Polygon extends Shape {
     this.closed = false;
     this.id = id;
     this.fillColor = fillColor;
+    // this.fillImage;
   }
 
   @override
@@ -53,10 +59,46 @@ class Polygon extends Shape {
       drawEdge(point1, point2, pixels, size, isAntiAliased);
 
       // check filling option
-      if (fillColor != null) {
+      if (fillColor != null && isFillColor == true) {
         scanlineFill(pixels, size, (x, y) => fillColor!);
       }
+      // check filling option
+      if (fillImage != null && isFillImage == true) {
+        scanlineFill(pixels, size, (x, y) {
+          final top = topLeft!.dy;
+          final left = topLeft!.dx;
+          final bottom = bottomRight!.dy;
+          final right = bottomRight!.dx;
+
+          var u = (x - left) / (right - left) * fillImage!.width;
+          var v = (y - top) / (bottom - top) * fillImage!.height;
+
+          if (u < 0) {
+            u = 0;
+          } else if (u >= fillImage!.width) {
+            u = fillImage!.width - 1;
+          }
+          if (v < 0) {
+            v = 0;
+          } else if (v >= fillImage!.height) {
+            v = fillImage!.height - 1;
+          }
+          return fillImage!.getPixel(u.toInt(), v.toInt());
+        });
+      }
     }
+  }
+
+  Point get topLeft {
+    double minX = all_points.map((p) => p.dx).reduce(math.min);
+    double minY = all_points.map((p) => p.dy).reduce(math.min);
+    return Point(minX, minY);
+  }
+
+  Point get bottomRight {
+    double maxX = all_points.map((p) => p.dx).reduce(math.max);
+    double maxY = all_points.map((p) => p.dy).reduce(math.max);
+    return Point(maxX, maxY);
   }
 
   void drawEdge(Point point1, Point point2, Uint8List pixels, ui.Size size, bool isAntiAliased) {
@@ -117,58 +159,6 @@ class Polygon extends Shape {
       dx: dx,
     );
   }
-  // void scanlineFill(
-  //     Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
-  //   List<int> sortedIndices = List<int>.generate(points.length, (i) => i);
-  //   sortedIndices.sort((a, b) {
-  //     int yCompare = points[a].dy.compareTo(points[b].dy);
-  //     return yCompare == 0 ? points[a].dx.compareTo(points[b].dx) : yCompare;
-  //   });
-
-  //   List<EdgeEntry> aet = [];
-
-  //   for (int y = 0; y < size.height.toInt(); y++) {
-  //     while (sortedIndices.isNotEmpty &&
-  //         points[sortedIndices.first].dy.toInt() == y) {
-  //       int currentIndex = sortedIndices.removeAt(0);
-  //       int prevIndex = (currentIndex - 1 + points.length) % points.length;
-  //       int nextIndex = (currentIndex + 1) % points.length;
-
-  //       Point currentPoint = points[currentIndex];
-  //       if (points[nextIndex].dy > currentPoint.dy) {
-  //         aet.add(createEdge(points[currentIndex], points[nextIndex]));
-  //       }
-  //       if (points[prevIndex].dy > currentPoint.dy) {
-  //         aet.add(createEdge(points[currentIndex], points[prevIndex]));
-  //       }
-  //     }
-
-  //     aet.removeWhere((edge) => edge.yMax.toInt() == y);
-  //     for (var edge in aet) {
-  //       edge.x += edge.dx;
-  //     }
-
-  //     aet.sort((a, b) => (a.x).compareTo(b.x));
-
-  //     for (int i = 0; i < aet.length; i += 2) {
-  //       int startX = aet[i].x.toInt();
-  //       int endX = aet[i + 1].x.toInt();
-  //       for (int x = startX; x <= endX; x++) {
-  //         drawPixel(
-  //             pixels, size, Point(x.toDouble(), y.toDouble()), color(x, y));
-  //       }
-  //     }
-  //   }
-  // }
-
-  // EdgeEntry createEdge(ui.Offset start, ui.Offset end) {
-  //   double dx = (end.dx - start.dx) / (end.dy - start.dy);
-  //   return EdgeEntry(
-  //     x: start.dx,
-  //     yMax: end.dy,
-  //     dx: dx,
-  //   );
-  // }
 
   @override
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
