@@ -3,18 +3,22 @@ import 'package:flutter/services.dart';  // menubar for mac
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';  // FilePicker
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:math' as math;
 
 // files
 import 'points.dart';
+import 'fileManager.dart';
+import 'image.dart';
+
 import 'shape/shape.dart';
 import 'shape/line.dart';
 import 'shape/circle.dart';
 import 'shape/polygon.dart';
 import 'shape/rectangle.dart';
-import 'fileManager.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -50,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Colors.yellow,
     Colors.orange,
     Colors.purple,
+    Color(0xFFF5F5F5), // background color to reset the fill color
   ];
 
   String shapeType = 'Line'; // Default shape
@@ -57,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Properties
   double currentThickness = 4;
   Color currentColor = Colors.black;  // default
+  Color currentFillColor = Color(0xFFF5F5F5); // dafault
   Color canvasColor = Color(0xFFF5F5F5);
   int id = 0;
   int n_circle = 1; // default
@@ -75,8 +81,11 @@ class _MyHomePageState extends State<MyHomePage> {
   bool movingVertex = false;
   bool movingLocation = false;
   bool isPlygonClosed = false;
+  bool isFillColor = false;
+  bool isFillImage = false;
   Shape? selectedShape = null;
-
+  ImageData? fillImage;
+ 
   // Point
   List<Point> points = List<Point>.empty(growable: true);
   List<Point> polygonPoints = List<Point>.empty(growable: true);
@@ -91,10 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentShapeIndex = -1;
   int currentEdgeIndex = -1;
   int currentVertexIndex = -1;
-
-  // File manager
-  String? selectedDirectory;
-  TextEditingController fileNameController = TextEditingController();
 
   void startDrawing(DragStartDetails details) {
     print("startDrawing() is called!");
@@ -184,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
           polygonPoints.add(offsetToPoint(details.localPosition));
 
           if(polygonPoints.length < 3){
-            shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id));
+            shapes.add(Polygon(polygonPoints, currentThickness.toInt(), currentColor, id, currentFillColor));
           }
 
           // DEBUG
@@ -200,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
             print("###### Polygon is closed! ######\n");
             polygonPoints[polygonPoints.length - 1] = polygonPoints[0];
             // 閉じたポリゴンをshapesリストに追加
-            shapes.add(Polygon(List.from(polygonPoints), currentThickness.toInt(), currentColor, id));
+            shapes.add(Polygon(List.from(polygonPoints), currentThickness.toInt(), currentColor, id, currentFillColor));
             id += 1;
             polygonPoints.clear();
           }
@@ -250,7 +255,39 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  deleteSelectedObj(){
+  void fillingPolygon() {
+    print("filling methods clicked\n");
+
+    for (var shape in shapes) {
+      if (selectedShape?.getId() == shape.getId()) {
+        if (shape is Polygon) {
+          if(isFillColor == true){
+            print("Set currentFillColor to the chosen polygon\n");
+            shape.isFillColor = true;
+            shape.isFillImage = false;
+            shape.fillColor = currentFillColor;
+          }
+          if(isFillImage == true){
+            print("Set Image to the chosen polygon\n");
+            shape.isFillColor = false;
+            shape.isFillImage = true;
+            shape.fillImage = fillImage;
+          }
+        }             
+      }
+    }
+  }
+  
+  void deleteAll(){
+    shapes.clear();  // Clears all shapes
+    polygonPoints.clear();
+    id = 0;
+    currentFillColor = Color(0xFFF5F5F5); // back to dafault
+    fillImage = null;
+    print("Deleted all shapes!");
+  }
+
+  void deleteSelectedObj(){
     
     if (shape_isSelected && selectedShape != null) {
       shapes.removeWhere((shape) => shape.getId() == selectedShape!.getId());
@@ -332,6 +369,34 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     shapes = await FileManager.loadShapes(filePath);
     setState(() {});
+  }
+
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result == null) return; // Exit if no file picked
+
+    String? filePath = result.files.single.path;
+    if (filePath == null) {
+      print("No file selected.");
+      return;
+    }
+
+    final Uint8List imageData = await File(filePath).readAsBytes();
+    final Image imageFile = Image.memory(imageData);
+
+    // Get image dimensions
+    final Completer<ui.Image> completer = Completer();
+    imageFile.image.resolve(ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        completer.complete(info.image);
+      }),
+    );
+
+    final ui.Image uiImage = await completer.future;
+    setState(() {
+      fillImage = ImageData(imageData, uiImage.width, uiImage.height);
+      fillingPolygon();
+    });
   }
 
   //----- Functions -----
@@ -429,12 +494,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           // ----- COLOR PALETTE, THICKNESS SLIDER, SHAPE SELECT ALL IN ONE ROW -----
                           Wrap(
-                            spacing: 8.0,  // Horizontal space between the children
-                            runSpacing: 4.0,  // Vertical space between the lines
+                            spacing: 8.0, // Horizontal space between the children
+                            runSpacing: 4.0, // Vertical space between the lines
                             children: [
                               // Color Palette
-                              ...colors.map((color) => InkWell(
-                                onTap: () {
+                              PopupMenuButton<Color>(
+                                initialValue: currentColor,
+                                onSelected: (Color color) {
                                   setState(() {
                                     currentColor = color;
                                   });
@@ -443,15 +509,34 @@ class _MyHomePageState extends State<MyHomePage> {
                                   width: 36,
                                   height: 36,
                                   decoration: BoxDecoration(
-                                    color: color,
+                                    color: currentColor,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: currentColor == color ? Colors.black : Colors.transparent,
-                                      width: 2
-                                    )
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
-                              )).toList(),
+                                itemBuilder: (BuildContext context) {
+                                  return colors.map((Color color) {
+                                    return PopupMenuItem<Color>(
+                                      value: color,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: currentColor == color ? Colors.black : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                              ),
                               
                               // Thickness Slider
                               Container(
@@ -497,11 +582,87 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape == 'Polygon' ? Icons.change_history :
                                     Icons.crop_square,  // Icon for Rectangle
                                     color: shapeType == shape ? Colors.blue : Colors.black,
-                                    // Icons.change_history,
-                                    // color: shapeType == shape ? Colors.blue : Colors.black,
                                   ),
                                 ),
                               )),
+
+                              // Adding space
+                              SizedBox(width: 10.0),
+                              // Label "Fill Color"
+                              // Text('Fill Color:'),
+                              
+                              // Color Palette for fill color
+                              PopupMenuButton<Color>(
+                                initialValue: currentFillColor,
+                                onSelected: (Color color) {
+                                  setState(() {
+                                    currentFillColor = color;
+                                  });
+                                },
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: currentFillColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                itemBuilder: (BuildContext context) {
+                                  return colors.map((Color color) {
+                                    return PopupMenuItem<Color>(
+                                      value: color,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: currentFillColor == color ? Colors.black : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                              ),
+                              // Fill with image button
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Implement functionality to fill the shape with an image
+                                  isFillColor = true;
+                                  isFillImage = false;
+                                  fillingPolygon();
+                                },
+                                child: Text('Fill with Color'),
+                              ),
+                              // I want to put small image that currently chosen. If not, empty rectangle
+                              Container(
+                                width: 35,
+                                height: 35,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: fillImage != null
+                                    ? Image.memory(
+                                        fillImage!.pixels,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Center(child: Text('X')),
+                              ),
+                              ElevatedButton(
+                                onPressed: (){
+                                  isFillColor = false;
+                                  isFillImage = true;
+                                  _pickImage();
+                                },
+                                child: Text('Fill with Image'),
+                              ),
                             ],
                           ),
                           Row(
@@ -533,10 +694,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   onPressed: () {
                                     // Add eraser functionality for deleting all shapes
                                     setState(() {
-                                      shapes.clear();  // Clears all shapes
-                                      polygonPoints.clear();
-                                      id = 0;
-                                      print("Deleted all shapes!");
+                                      deleteAll();
                                     });
                                   },
                                 ),

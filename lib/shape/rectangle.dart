@@ -32,7 +32,7 @@ class Rectangle extends Shape {
     right_line = [Point(this.end_dx, this.start_dy), Point(this.end_dx, this.end_dy)];
     // lower line
     lower_line = [Point(this.end_dx, this.end_dy), Point(this.start_dx, this.end_dy)];
-    // 左の辺
+    // left line
     left_line = [Point(this.start_dx, this.end_dy), Point(this.start_dx, this.start_dy)];
 
   }
@@ -81,7 +81,6 @@ class Rectangle extends Shape {
       this.color = color;
       this.thickness = thickness;
       this.color = color;
-
   }
 
   @override
