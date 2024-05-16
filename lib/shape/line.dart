@@ -9,10 +9,10 @@ class Line extends Shape {
 
   Line(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
   {
-    print("----- Line obj -----");
-    print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
-    print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
-    print("color: ${this.color}, thickness:${this.thickness} \n");
+    // print("----- Line obj -----");
+    // print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
+    // print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+    // print("color: ${this.color}, thickness:${this.thickness} \n");
 
     this.start_dx = points[0].dx;
     this.start_dy = points[0].dy;

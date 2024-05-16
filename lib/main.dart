@@ -83,6 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isPlygonClosed = false;
   bool isFillColor = false;
   bool isFillImage = false;
+  bool isClipping = false;
   Shape? selectedShape = null;
   ImageData? fillImage;
  
@@ -108,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       
       // adding point to Point List to draw shape
-      if(!shape_isSelected){
+      if(!shape_isSelected && isClipping == false){
         if(!drawingPolygon){
           points.add(offsetToPoint(details.localPosition));
         }else{
@@ -118,6 +119,14 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         
         // print("${details.localPosition} \n");
+      }
+      else if(shape_isSelected && isClipping == true){
+        if(drawingRectangle){
+          print("%%%%%% drawing Clipping Rectangle is called! %%%%%%\n");
+          print(points);
+          points.clear();
+          points.add(offsetToPoint(details.localPosition));
+        }
       }
       else{ // 
 
@@ -138,21 +147,14 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void continueDrawing(DragUpdateDetails details) {
-    // print("continueDrawing is called!");
-    setState(() {
-
-    });
-  }
-
   double calc_distance(Point point1, Point point2){
-    print("----- calc_distance is called -----\n");
-    print("point1: (${point1.dx}, ${point1.dy})\n");
-    print("point2: (${point2.dx}, ${point2.dy})\n");
-    print("x_diff: ${math.pow(point1.dx - point2.dx, 2)}, y_diff: ${math.pow(point1.dy - point2.dy, 2)} \n");
-    print("diff: ${(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))} \n");
-    print("distance: ${math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))}\n");
-    print("-----------------------------------\n");
+    // print("----- calc_distance is called -----\n");
+    // print("point1: (${point1.dx}, ${point1.dy})\n");
+    // print("point2: (${point2.dx}, ${point2.dy})\n");
+    // print("x_diff: ${math.pow(point1.dx - point2.dx, 2)}, y_diff: ${math.pow(point1.dy - point2.dy, 2)} \n");
+    // print("diff: ${(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))} \n");
+    // print("distance: ${math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))}\n");
+    // print("-----------------------------------\n");
     double dist = math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
 
     return dist;
@@ -161,7 +163,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // check if the start point is closed to the last point
   bool isClosed(Point point1, Point point2){
     final distance = calc_distance(point1, point2);
-    print("isClosed distance: $distance");
+    // print("isClosed distance: $distance");
     return distance <= 17;
   }
 
@@ -195,10 +197,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
           // DEBUG
           // print("======== DEBUG =========\n");
-          for (var i = 0; i < polygonPoints.length - 1; i++) {
-            print("start: (${polygonPoints[i].dx}, ${polygonPoints[i].dy})\n");
-            print("end: (${polygonPoints[i+1].dx}, ${polygonPoints[i+1].dy})\n");
-          }
+          // for (var i = 0; i < polygonPoints.length - 1; i++) {
+          //   print("start: (${polygonPoints[i].dx}, ${polygonPoints[i].dy})\n");
+          //   print("end: (${polygonPoints[i+1].dx}, ${polygonPoints[i+1].dy})\n");
+          // }
           // print("=========================\n");
 
           // added point is closed to the start point, then closure 
@@ -212,10 +214,52 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         }
         else if(drawingRectangle){
-          shapes.add(Rectangle(points, currentThickness.toInt(), currentColor, id));
-          id += 1;
-          points.clear();
+
+          if(isClipping == false){
+            print("drawing rectangle!\n");
+            print(points);
+            shapes.add(Rectangle(points, currentThickness.toInt(), currentColor, id));
+            id += 1;
+            points.clear();
+          }
+          // else{
+          //   // apply clipping algorithm
+          //   print("%%%%%%%%%%% clipping method %%%%%%%%%%%%\n");
+          //   print(points);
+          //   for (var shape in shapes) {
+          //     if (selectedShape?.getId() == shape.getId()) {
+          //       print("%%%%%%%%%%% GET ID %%%%%%%%%%%% ${selectedShape?.getId()}\n");
+          //       if (shape is Polygon) {
+  
+          //         // print("%%%%%%%%%%% ABOUT TO CLIPP %%%%%%%%%%%%\n"); // Error caused
+          //         // shape.clippingRectangle = Rectangle(points, currentThickness.toInt(), currentColor, -10);
+          //         // points.clear();
+          //       }             
+          //     }
+          //   }
+          // }
         }
+      }
+      else if(shape_isSelected && drawingRectangle == true){
+        // apply clipping algorithm
+        points.add(offsetToPoint(details.localPosition));
+        print("================ DEBUG ==================\n");
+        print("drawing polygon: ${drawingPolygon}\n");
+        print("drawing rectangle: ${drawingRectangle}\n");
+        print("shape_isSelected: ${shape_isSelected}\n");
+        print("%%%%%%%%%%% clipping method %%%%%%%%%%%%\n");
+        print(points);
+        for (var shape in shapes) {
+          if (selectedShape?.getId() == shape.getId()) {
+            print("%%%%%%%%%%% GET ID %%%%%%%%%%%% ${selectedShape?.getId()}\n");
+            if (shape is Polygon) {
+              // print("%%%%%%%%%%% ABOUT TO CLIPP %%%%%%%%%%%%\n"); // Error caused
+              shape.clippingRectangle = Rectangle(points, currentThickness.toInt(), currentColor, -10);
+            }             
+          }
+        }
+        points.clear();
+        print("===========================================\n");
       }
       else{ // edit mode
 
@@ -278,7 +322,18 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
   }
-  
+
+  // void clippingRec(){
+  //   print("clippingRec is called!\n");
+  //   for (var shape in shapes) {
+  //     if (selectedShape?.getId() == shape.getId()) {
+  //       if (shape is Polygon) {
+          
+  //       }             
+  //     }
+  //   }
+  // }
+
   void deleteAll(){
     shapes.clear();  // Clears all shapes
     polygonPoints.clear();
@@ -455,7 +510,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 isShape(details);
               },
               onPanStart: (details) { startDrawing(details); },
-              onPanUpdate: (details) { continueDrawing(details); },
               onPanEnd: (details) { stopDrawing(details); },
               child: Container(
                 color: canvasColor,  // キャンバスの色を設定
@@ -564,6 +618,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     drawingCircle = shape == 'Circle';
                                     drawingPolygon = shape == 'Polygon';
                                     drawingRectangle = shape == 'Rectangle';
+                                    
+                                    isClipping = false;
                                     shape_edit = false;
                                   });
                                 },
@@ -662,6 +718,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                   _pickImage();
                                 },
                                 child: Text('Fill with Image'),
+                              ),
+                              ElevatedButton(
+                                onPressed: (){
+                                  shapeType = 'Rectangle';
+                                  isClipping = true; // true
+                                  shape_edit = false; 
+                                  drawingLine = false; 
+                                  drawingCircle = false; 
+                                  drawingPolygon = false;
+                                  drawingRectangle = true;  // true
+                                },
+                                child: Text('Set Clipping Rectangle'),
                               ),
                             ],
                           ),

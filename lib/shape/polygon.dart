@@ -5,6 +5,7 @@ import 'shape.dart';
 import '../points.dart';
 import '../image.dart';
 import 'line.dart';
+import 'rectangle.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:math' as math;
@@ -22,18 +23,18 @@ class Polygon extends Shape {
 
   Color? fillColor;
   ImageData? fillImage;
+  Rectangle? clippingRectangle;
 
   Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id)
   {
-    print("----- Polygon obj -----");
+    // print("----- Polygon obj -----");
     // print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
     // print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
     this.all_points = all_points;
-    for (var i = 0; i < this.all_points.length - 1; i++) {
-      print("start: (${this.all_points[i].dx}, ${all_points[i].dy})\n");
-      print("end: (${this.all_points[i+1].dx}, ${all_points[i+1].dy})\n");
-    }
-
+    // for (var i = 0; i < this.all_points.length - 1; i++) {
+    //   print("start: (${this.all_points[i].dx}, ${all_points[i].dy})\n");
+    //   print("end: (${this.all_points[i+1].dx}, ${all_points[i+1].dy})\n");
+    // }
     this.closed = false;
     this.id = id;
     this.fillColor = fillColor;
@@ -53,7 +54,7 @@ class Polygon extends Shape {
       drawEdge(point1, point2, pixels, size, isAntiAliased);
     }
     if (this.isClosed(all_points[0], all_points[all_points.length - 1])) {
-      print("isClosed() true!!\n");
+      // print("isClosed() true!!\n");
       final point1 = all_points[all_points.length - 1];
       final point2 = all_points[0];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
@@ -107,9 +108,70 @@ class Polygon extends Shape {
       point1,  
       point2 
     ];
-    final line = Line(linePoints, thickness, color, -10); // id
-    line.draw(pixels, size, isAntiAliased: isAntiAliased);
+
+    if(clippingRectangle == null){
+      // default
+      final line = Line(linePoints, thickness, color, -10); // id
+      line.draw(pixels, size, isAntiAliased: isAntiAliased);
+    } else {
+      // apply clipping rectangle
+      var lineClipping = liangBarsky(
+        point1.dx,
+        point1.dy,
+        point2.dx,
+        point2.dy,
+        clippingRectangle!.left,
+        clippingRectangle!.top,
+        clippingRectangle!.right,
+        clippingRectangle!.bottom,
+      );
+      if (lineClipping == null) {
+        return;
+      }
+      List<Point> points = [Point(lineClipping[0], lineClipping[1]), Point(lineClipping[2], lineClipping[3])];
+      final line = Line(points, this.thickness, this.color, -10);
+      line.draw(pixels, size, isAntiAliased: isAntiAliased);
+    }
   }
+
+  List<double>? liangBarsky(double x1, double y1, double x2, double y2,
+      double left, double top, double right, double bottom) {
+    double t0 = 0.0;
+    double t1 = 1.0;
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+
+    final List<double> p = [-dx, dx, -dy, dy];
+    final List<double> q = [x1 - left, right - x1, y1 - top, bottom - y1];
+
+    for (int i = 0; i < 4; i++) {
+      if (p[i] == 0) {
+        if (q[i] < 0) {
+          return null;
+        }
+        continue;
+      }
+
+      double t = q[i] / p[i];
+      if (p[i] < 0) {
+        t0 = max(t0, t);
+      } else {
+        t1 = min(t1, t);
+      }
+
+      if (t0 > t1) {
+        return null;
+      }
+    }
+
+    return [
+      x1 + t0 * dx,
+      y1 + t0 * dy,
+      x1 + t1 * dx,
+      y1 + t1 * dy,
+    ];
+  }
+
   void scanlineFill(Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
     List<int> sortedIndices = List<int>.generate(all_points.length, (i) => i);
     sortedIndices.sort((a, b) {
@@ -189,7 +251,7 @@ class Polygon extends Shape {
   // check if the start point is closed to the last point
   bool isClosed(Point point1, Point point2){
     final distance = calc_distance(point1, point2);
-    print("isClosed distance: $distance");
+    // print("isClosed distance: $distance");
     return distance <= 17;
   }
 
@@ -211,7 +273,7 @@ class Polygon extends Shape {
     }
 
     // If the number of crossings is odd, the point is inside the polygon
-    print('is it the center point? : ${crossings % 2}\n');
+    // print('is it the center point? : ${crossings % 2}\n');
     return (crossings % 2 != 0);
   }
 
@@ -263,7 +325,7 @@ class Polygon extends Shape {
       }
 
       // If the number of crossings is odd, the point is inside the polygon
-      print('is it the center point? : ${crossings % 2}\n');
+      // print('is it the center point? : ${crossings % 2}\n');
       return (crossings % 2 != 0);
 
       // return false;
