@@ -86,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isClipping = false;
   Shape? selectedShape = null;
   ImageData? fillImage;
+  ui.Image? decodedImage;
  
   // Point
   List<Point> points = List<Point>.empty(growable: true);
@@ -147,16 +148,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   double calc_distance(Point point1, Point point2){
-    // print("----- calc_distance is called -----\n");
-    // print("point1: (${point1.dx}, ${point1.dy})\n");
-    // print("point2: (${point2.dx}, ${point2.dy})\n");
-    // print("x_diff: ${math.pow(point1.dx - point2.dx, 2)}, y_diff: ${math.pow(point1.dy - point2.dy, 2)} \n");
-    // print("diff: ${(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))} \n");
-    // print("distance: ${math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2))}\n");
-    // print("-----------------------------------\n");
-    double dist = math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
-
-    return dist;
+    return math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+    // double dist = math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+    // return dist;
   }
 
   // check if the start point is closed to the last point
@@ -301,8 +295,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void fillingPolygon() {
     setState(() {
-      // print("filling methods clicked\n");
-      // print("selectedShape?.getId(): ${selectedShape?.getId()}\n");
+      print("filling methods clicked\n");
+      print("selectedShape?.getId(): ${selectedShape?.getId()}\n");
       for (var shape in shapes) {
         if (selectedShape?.getId() == shape.getId()) {
           if (shape is Polygon) {
@@ -315,9 +309,13 @@ class _MyHomePageState extends State<MyHomePage> {
             }
             if (isFillImage == true) {
               print("Set Image to the chosen polygon\n");
+              print("fillImage width: ${fillImage?.width}, height: ${fillImage?.height}\n");
               shape.isFillColor = false;
               shape.isFillImage = true;
-              shape.fillImage = fillImage;
+              if (fillImage != null) {
+                print("fillImage data length: ${fillImage!.pixels.length}\n");
+              }
+              // shape.fillImage = fillImage;
             }
           }
         }
@@ -440,10 +438,54 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     final ui.Image uiImage = await completer.future;
+    print("Loaded image width: ${uiImage.width}, height: ${uiImage.height}");
+
+    // Convert to RGBA format
+    final ByteData? byteData = await uiImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) {
+      print("Failed to convert image to RGBA format.");
+      return;
+    }
     setState(() {
-      fillImage = ImageData(imageData, uiImage.width, uiImage.height);
+      fillImage = ImageData(byteData.buffer.asUint8List(), uiImage.width, uiImage.height);
       fillingPolygon();
     });
+  }
+
+  // decode image from pixels to display in the box
+  Future<ui.Image> decodeImageFromPixels(Uint8List pixels, int width, int height) async {
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromPixels(
+      pixels,
+      width,
+      height,
+      ui.PixelFormat.rgba8888,
+      (ui.Image img) {
+        completer.complete(img);
+      },
+    );
+    return completer.future;
+  }
+
+  Future<void> _convertImage() async {
+    if (fillImage != null) {
+      final ui.Image image = await decodeImageFromPixels(
+        fillImage!.pixels,
+        fillImage!.width,
+        fillImage!.height,
+      );
+      setState(() {
+        decodedImage = image;
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MyHomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (fillImage != null) {
+      _convertImage();
+    }
   }
 
   //----- Functions -----
@@ -689,7 +731,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                 },
                                 child: Text('Fill with Color'),
                               ),
-                              // I want to put small image that currently chosen. If not, empty rectangle
+                              // display current chosen image
+                              // Container(
+                              //   width: 35,
+                              //   height: 35,
+                              //   decoration: BoxDecoration(
+                              //     border: Border.all(color: Colors.black),
+                              //   ),
+                              //   child: fillImage != null
+                              //       ? Image.memory(
+                              //           fillImage!.pixels,
+                              //           fit: BoxFit.cover,
+                              //         )
+                              //       : Center(child: Text('X')),
+                              // ),
                               Container(
                                 width: 35,
                                 height: 35,
@@ -697,9 +752,25 @@ class _MyHomePageState extends State<MyHomePage> {
                                   border: Border.all(color: Colors.black),
                                 ),
                                 child: fillImage != null
-                                    ? Image.memory(
-                                        fillImage!.pixels,
-                                        fit: BoxFit.cover,
+                                    ? FutureBuilder<ui.Image>(
+                                        future: decodeImageFromPixels(
+                                          fillImage!.pixels,
+                                          fillImage!.width,
+                                          fillImage!.height,
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState == ConnectionState.done &&
+                                              snapshot.hasData) {
+                                            return RawImage(
+                                              image: snapshot.data,
+                                              fit: BoxFit.cover,
+                                            );
+                                          } else if (snapshot.hasError) {
+                                            return Center(child: Text('Error loading image'));
+                                          } else {
+                                            return Center(child: CircularProgressIndicator());
+                                          }
+                                        },
                                       )
                                     : Center(child: Text('X')),
                               ),
