@@ -14,6 +14,12 @@ class Rectangle extends Shape {
   late List<Point> lower_line;
   late List<Point> left_line;
 
+  // Getter
+  double get left => min(this.start_dx, this.end_dx);
+  double get top => min(this.start_dy, this.end_dy);
+  double get right => max(this.start_dx, this.end_dx);
+  double get bottom => max(this.start_dy, this.end_dy);
+
   Rectangle(List<Point> points, int thickness, Color color, int id) : super(points, thickness, color, id)
   {
     print("----- Rectangle obj -----");
