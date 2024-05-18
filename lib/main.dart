@@ -301,38 +301,30 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void fillingPolygon() {
-    print("filling methods clicked\n");
-
-    for (var shape in shapes) {
-      if (selectedShape?.getId() == shape.getId()) {
-        if (shape is Polygon) {
-          if(isFillColor == true){
-            print("Set currentFillColor to the chosen polygon\n");
-            shape.isFillColor = true;
-            shape.isFillImage = false;
-            shape.fillColor = currentFillColor;
+    setState(() {
+      // print("filling methods clicked\n");
+      // print("selectedShape?.getId(): ${selectedShape?.getId()}\n");
+      for (var shape in shapes) {
+        if (selectedShape?.getId() == shape.getId()) {
+          if (shape is Polygon) {
+            if (isFillColor == true) {
+              print("Set currentFillColor to the chosen polygon\n");
+              print("currentFillColor: ${currentFillColor}\n");
+              shape.isFillColor = true;
+              shape.isFillImage = false;
+              shape.fillColor = currentFillColor;
+            }
+            if (isFillImage == true) {
+              print("Set Image to the chosen polygon\n");
+              shape.isFillColor = false;
+              shape.isFillImage = true;
+              shape.fillImage = fillImage;
+            }
           }
-          if(isFillImage == true){
-            print("Set Image to the chosen polygon\n");
-            shape.isFillColor = false;
-            shape.isFillImage = true;
-            shape.fillImage = fillImage;
-          }
-        }             
+        }
       }
-    }
+    });
   }
-
-  // void clippingRec(){
-  //   print("clippingRec is called!\n");
-  //   for (var shape in shapes) {
-  //     if (selectedShape?.getId() == shape.getId()) {
-  //       if (shape is Polygon) {
-          
-  //       }             
-  //     }
-  //   }
-  // }
 
   void deleteAll(){
     shapes.clear();  // Clears all shapes
