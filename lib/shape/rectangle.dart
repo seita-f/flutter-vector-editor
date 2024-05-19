@@ -103,6 +103,8 @@ class Rectangle extends Shape {
   //------ File Manager ------
   @override
   static Shape? fromJson(Map<String, dynamic> json) {
+
+    print("Rectangle fromJson is called\n");
     if (json['type'] == 'rectangle') {
       
         List<Point> points = [

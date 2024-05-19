@@ -28,4 +28,16 @@ class Point {
   String toString(){
     return "(${this.dx}, ${this.dy}) \n";
   }
+
+  static Point fromJson(Map<String, dynamic> json) {
+    return Point(json['dx'], json['dy']);
+  }
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'dx': dx,
+      'dy': dy,
+    };
+  }
+  
 }

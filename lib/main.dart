@@ -126,6 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
           print(points);
           points.clear();
           points.add(offsetToPoint(details.localPosition));
+          isClipping = false;
         }
       }
       else{ // 
@@ -158,6 +159,13 @@ class _MyHomePageState extends State<MyHomePage> {
     final distance = calc_distance(point1, point2);
     // print("isClosed distance: $distance");
     return distance <= 17;
+  }
+
+  void debug_flags(){
+    print("========== DEBUG FLAGS ===========\n");
+    // print("edit mode: ${}\n");
+    // print("edit mode: ${}\n");
+    print("==================================\n");
   }
 
   void stopDrawing(DragEndDetails details) {
@@ -413,7 +421,10 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
     shapes = await FileManager.loadShapes(filePath);
-    setState(() {});
+    setState((
+      
+
+    ) {});
   }
 
   Future<void> _pickImage() async {
@@ -731,20 +742,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 },
                                 child: Text('Fill with Color'),
                               ),
-                              // display current chosen image
-                              // Container(
-                              //   width: 35,
-                              //   height: 35,
-                              //   decoration: BoxDecoration(
-                              //     border: Border.all(color: Colors.black),
-                              //   ),
-                              //   child: fillImage != null
-                              //       ? Image.memory(
-                              //           fillImage!.pixels,
-                              //           fit: BoxFit.cover,
-                              //         )
-                              //       : Center(child: Text('X')),
-                              // ),
                               Container(
                                 width: 35,
                                 height: 35,

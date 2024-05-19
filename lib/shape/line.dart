@@ -260,6 +260,8 @@ class Line extends Shape {
     //----- File Manger -----
     @override
     static Shape? fromJson(Map<String, dynamic> json) {
+
+        print("line fromJson is called\n");
         if (json['type'] == 'line') {
             List<Point> points = [
                 Point(json['start']['dx'], json['start']['dy']),
@@ -277,8 +279,6 @@ class Line extends Shape {
 
     @override
     Map<String, dynamic> toJson() {
-        // print("start: $start_dx, $end_dx");
-        // print("end  : $end_dx,   $end_dy");
         return {
         'type': 'line',
         'start': {'dx': start_dx, 'dy': start_dy},
