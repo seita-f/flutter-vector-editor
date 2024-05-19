@@ -64,7 +64,12 @@ class Polygon extends Shape {
         scanlineFill(pixels, size, (x, y) => fillColor!);
       }
       // check filling option
-      if (fillImage != null && isFillImage == true) {
+
+      print("fillImage: ${this.fillImage}\n");
+      print("isFillImage: ${isFillImage}\n");
+      if (this.fillImage != null && this.isFillImage == true) {
+
+        print("fillImage != null && isFillImage == true \n");
         scanlineFill(pixels, size, (x, y) {
           final top = topLeft!.dy;
           final left = topLeft!.dx;

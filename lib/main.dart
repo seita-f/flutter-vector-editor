@@ -316,7 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
               if (fillImage != null) {
                 print("fillImage data length: ${fillImage!.pixels.length}\n");
               }
-              // shape.fillImage = fillImage;
+              shape.fillImage = fillImage;
             }
           }
         }
