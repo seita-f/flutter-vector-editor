@@ -215,22 +215,22 @@ class _MyHomePageState extends State<MyHomePage> {
             id += 1;
             points.clear();
           }
-          // else{
-          //   // apply clipping algorithm
-          //   print("%%%%%%%%%%% clipping method %%%%%%%%%%%%\n");
-          //   print(points);
-          //   for (var shape in shapes) {
-          //     if (selectedShape?.getId() == shape.getId()) {
-          //       print("%%%%%%%%%%% GET ID %%%%%%%%%%%% ${selectedShape?.getId()}\n");
-          //       if (shape is Polygon) {
+          else{
+            // apply clipping algorithm
+            print("%%%%%%%%%%% clipping method %%%%%%%%%%%%\n");
+            print(points);
+            for (var shape in shapes) {
+              if (selectedShape?.getId() == shape.getId()) {
+                print("%%%%%%%%%%% GET ID %%%%%%%%%%%% ${selectedShape?.getId()}\n");
+                if (shape is Polygon) {
   
-          //         // print("%%%%%%%%%%% ABOUT TO CLIPP %%%%%%%%%%%%\n"); // Error caused
-          //         // shape.clippingRectangle = Rectangle(points, currentThickness.toInt(), currentColor, -10);
-          //         // points.clear();
-          //       }             
-          //     }
-          //   }
-          // }
+                  // print("%%%%%%%%%%% ABOUT TO CLIPP %%%%%%%%%%%%\n"); // Error caused
+                  shape.clippingRectangle = Rectangle(points, currentThickness.toInt(), currentColor, -10);
+                  points.clear();
+                }             
+              }
+            }
+          }
         }
       }
       else if(shape_isSelected && drawingRectangle == true){
