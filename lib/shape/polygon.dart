@@ -80,12 +80,15 @@ class Polygon extends Shape {
     }
 
     if (clippingRectangle != null) {
-      List<Point> clippedPoints = clipPolygon(all_points, clippingRectangle!);
-      connectClippedEdges(clippedPoints, pixels, size, isAntiAliased);
+      // List<Point> clippedPoints = clipPolygon(all_points, clippingRectangle!);
+      // connectClippedEdges(clippedPoints, pixels, size, isAntiAliased);
+      clipPolygon(all_points, clippingRectangle!);
+      connectClippedEdges(all_points, pixels, size, isAntiAliased);
     }
   }
 
-  List<Point> clipPolygon(List<Point> points, Rectangle clippingRectangle) {
+  // List<Point> clipPolygon(List<Point> points, Rectangle clippingRectangle) {
+  void clipPolygon(List<Point> points, Rectangle clippingRectangle) {
     List<Point> clippedPoints = [];
     for (int i = 0; i < points.length - 1; i++) {
       var clippedLine = cohenSutherlandClip(
@@ -103,7 +106,8 @@ class Polygon extends Shape {
         clippedPoints.add(Point(clippedLine[2], clippedLine[3]));
       }
     }
-    return clippedPoints;
+    // return clippedPoints;
+    all_points = clippedPoints; // Assign clipped points to all_points
   }
 
   void connectClippedEdges(List<Point> clippedPoints, Uint8List pixels, ui.Size size, bool isAntiAliased) {
@@ -407,25 +411,68 @@ class Polygon extends Shape {
   }
 
   static Shape? fromJson(Map<String, dynamic> json) {
+
+    print("polygon fromJson is called\n");
+    if (json['type'] == 'polygon') {
+      final points = <Point>[];
+      for (var i = 0; i < json['points'].length; i++) {
+        final point = json['points'][i];
+        points.add(Point(point['dx'], point['dy']));
+      }
+      
+      for (var i = 0; i < points.length - 1; i++) {
+        print("start: (${points[i].dx}, ${points[i].dy})\n");
+        print("end: (${points[i+1].dx}, ${points[i+1].dy})\n");
+      }
+
+      var fillImage = json['fillImage'] != null
+          ? ImageData.fromJson(json['fillImage'])
+          : null;
+      var fillColor = json['fillColor'] != null
+          ? Color(json['fillColor'])
+          : null;
+
+      // clippingRectangleの処理を追加
+      Rectangle? clippingRectangle = json['clipRectangle'] != null
+          ? Rectangle.fromJson(json['clipRectangle']) as Rectangle?
+          : null;
+
+      Polygon temp_polygon = Polygon(
+        points, 
+        json['thickness'], 
+        Color(json['color']), 
+        json['id'], 
+        fillColor ?? Colors.transparent // Provide a default fill color if null
+      );
+
+      temp_polygon.fillImage = fillImage;
+      temp_polygon.clippingRectangle = clippingRectangle;
+
+      return temp_polygon;
+    }
     return null;
   }
 
   @override
   Map<String, dynamic> toJson() {
-    final all_points = <Map<String, double>>[];
+    final pointsJson = <Map<String, dynamic>>[];
     for (var i = 0; i < this.all_points.length; i++) {
       final point = this.all_points[i];
-      all_points.add({'dx': point.dx, 'dy': point.dy});
+      pointsJson.add(point.toJson());
     }
     return {
       'type': 'polygon',
-      'points': points,
+      'points': pointsJson,
       'closed': closed,
       'thickness': thickness,
       'color': color.value,
+      'fillColor': fillColor?.value,
+      'fillImage': fillImage?.toJson(),
+      'clipRectangle': clippingRectangle?.toJson(),
+      'id': id,
     };
   }
-
+  
   void drawPixel(Uint8List pixels, ui.Size size, Point point, ui.Color color) {
     final x = point.dx.toInt();
     final y = point.dy.toInt();
@@ -444,7 +491,6 @@ class Polygon extends Shape {
     return "<${this.id}> Polygon Object: thickness ${this.thickness}, color ${this.color} \n";
   }
 }
-
 
 class EdgeEntry {
     double x;

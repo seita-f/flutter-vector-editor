@@ -3,6 +3,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'shape/shape.dart';
+import 'shape/circle.dart';
+import 'shape/line.dart';
+import 'shape/rectangle.dart';
+import 'shape/polygon.dart';
 
 class FileManager {
 
@@ -24,7 +28,24 @@ class FileManager {
     }
     String contents = await file.readAsString();
     List<dynamic> jsonData = json.decode(contents);
-    List<Shape> shapes = jsonData.map((item) => Shape.fromJson(item)).whereType<Shape>().toList();
+
+    List<Shape> shapes = jsonData.map((item) {
+      if (item['type'] == 'line') {
+        return Line.fromJson(item);
+      } else if (item['type'] == 'circle') {
+        return Circle.fromJson(item);
+      }
+      else if (item['type'] == 'rectangle') {
+        return Rectangle.fromJson(item);
+      }
+      else if (item['type'] == 'polygon') {
+        return Polygon.fromJson(item);
+      }
+      return null;
+    }).whereType<Shape>().toList();
     return shapes;
+
+    // List<Shape> shapes = jsonData.map((item) => Shape.fromJson(item)).whereType<Shape>().toList();
+    // return shapes;
   }
 }
