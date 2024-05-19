@@ -1,3 +1,389 @@
+// import 'dart:math';
+// import 'dart:typed_data';
+// import 'dart:ui' as ui;
+// import 'shape.dart';
+// import '../points.dart';
+// import '../image.dart';
+// import 'line.dart';
+// import 'rectangle.dart';
+// import 'package:flutter/material.dart';
+// import 'dart:math' as math;
+
+// class Polygon extends Shape {
+
+//   late List<Point> all_points;
+//   late List<Line> lines = []; 
+//   bool closed = false;
+  
+//   bool isFillColor = false;
+//   bool isFillImage = false;
+
+//   Color? fillColor;
+//   ImageData? fillImage;
+//   Rectangle? clippingRectangle;
+
+//   Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id) {
+//     this.all_points = all_points;
+//     this.closed = false;
+//     this.id = id;
+//     this.fillColor = fillColor;
+//   }
+
+//   @override
+//   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
+
+//     if (all_points.length < 2) {
+//       return; // 要素数が1未満の場合は処理をスキップ
+//     }
+
+//     for (var i = 0; i < all_points.length - 1; i++) {
+//       final point1 = all_points[i];
+//       final point2 = all_points[i + 1];
+//       drawEdge(point1, point2, pixels, size, isAntiAliased);
+//     }
+
+//     if (isClosed(all_points[0], all_points[all_points.length - 1])) {
+//       final point1 = all_points[all_points.length - 1];
+//       final point2 = all_points[0];
+//       drawEdge(point1, point2, pixels, size, isAntiAliased);
+
+//       // check filling option
+//       if (fillColor != null && isFillColor == true) {
+//         scanlineFill(pixels, size, (x, y) => fillColor!);
+//       }
+//       if (this.fillImage != null && this.isFillImage == true) {
+//         scanlineFill(pixels, size, (x, y) {
+//           final top = topLeft.dy;
+//           final left = topLeft.dx;
+//           final bottom = bottomRight.dy;
+//           final right = bottomRight.dx;
+
+//           var u = (x - left) / (right - left) * fillImage!.width;
+//           var v = (y - top) / (bottom - top) * fillImage!.height;
+
+//           if (u < 0) {
+//             u = 0;
+//           } else if (u >= fillImage!.width) {
+//             u = fillImage!.width - 1;
+//           }
+//           if (v < 0) {
+//             v = 0;
+//           } else if (v >= fillImage!.height) {
+//             v = fillImage!.height - 1;
+//           }
+//           return fillImage!.getPixel(u.toInt(), v.toInt());
+//         });
+//       }
+//     }
+
+//     if (clippingRectangle != null) {
+//       List<Point> clippedPoints = clipPolygon(all_points, clippingRectangle!);
+//       connectClippedEdges(clippedPoints, pixels, size, isAntiAliased);
+//     }
+//   }
+
+//   List<Point> clipPolygon(List<Point> points, Rectangle clippingRectangle) {
+//     List<Point> clippedPoints = [];
+//     for (int i = 0; i < points.length - 1; i++) {
+//       var clippedLine = liangBarsky(
+//         points[i].dx,
+//         points[i].dy,
+//         points[i + 1].dx,
+//         points[i + 1].dy,
+//         clippingRectangle.left,
+//         clippingRectangle.top,
+//         clippingRectangle.right,
+//         clippingRectangle.bottom,
+//       );
+//       if (clippedLine != null) {
+//         clippedPoints.add(Point(clippedLine[0], clippedLine[1]));
+//         clippedPoints.add(Point(clippedLine[2], clippedLine[3]));
+//       }
+//     }
+//     return clippedPoints;
+//   }
+
+//   void connectClippedEdges(List<Point> clippedPoints, Uint8List pixels, ui.Size size, bool isAntiAliased) {
+//     if (clippedPoints.length < 2) {
+//       return;
+//     }
+
+//     for (var i = 0; i < clippedPoints.length - 1; i++) {
+//       final point1 = clippedPoints[i];
+//       final point2 = clippedPoints[i + 1];
+//       drawEdge(point1, point2, pixels, size, isAntiAliased);
+//     }
+
+//     final point1 = clippedPoints[clippedPoints.length - 1];
+//     final point2 = clippedPoints[0];
+//     drawEdge(point1, point2, pixels, size, isAntiAliased);
+//   }
+
+//   Point get topLeft {
+//     double minX = all_points.map((p) => p.dx).reduce(math.min);
+//     double minY = all_points.map((p) => p.dy).reduce(math.min);
+//     return Point(minX, minY);
+//   }
+
+//   Point get bottomRight {
+//     double maxX = all_points.map((p) => p.dx).reduce(math.max);
+//     double maxY = all_points.map((p) => p.dy).reduce(math.max);
+//     return Point(maxX, maxY);
+//   }
+
+//   void drawEdge(Point point1, Point point2, Uint8List pixels, ui.Size size, bool isAntiAliased) {
+//     List<Point> linePoints = [
+//       point1,  
+//       point2 
+//     ];
+
+//     if(clippingRectangle == null){
+//       final line = Line(linePoints, thickness, color, -10); // id
+//       line.draw(pixels, size, isAntiAliased: isAntiAliased);
+//     } else {
+//       var lineClipping = liangBarsky(
+//         point1.dx,
+//         point1.dy,
+//         point2.dx,
+//         point2.dy,
+//         clippingRectangle!.left,
+//         clippingRectangle!.top,
+//         clippingRectangle!.right,
+//         clippingRectangle!.bottom,
+//       );
+//       if (lineClipping == null) {
+//         return;
+//       }
+//       List<Point> points = [Point(lineClipping[0], lineClipping[1]), Point(lineClipping[2], lineClipping[3])];
+//       final line = Line(points, this.thickness, this.color, -10);
+//       line.draw(pixels, size, isAntiAliased: isAntiAliased);
+//     }
+//   }
+
+//   List<double>? liangBarsky(double x1, double y1, double x2, double y2,
+//       double left, double top, double right, double bottom) {
+
+//     double t0 = 0.0;
+//     double t1 = 1.0;
+//     double dx = x2 - x1;
+//     double dy = y2 - y1;
+
+//     final List<double> p = [-dx, dx, -dy, dy];
+//     final List<double> q = [x1 - left, right - x1, y1 - top, bottom - y1];
+
+//     for (int i = 0; i < 4; i++) {
+//       if (p[i] == 0) {
+//         if (q[i] < 0) {
+//           return null;
+//         }
+//         continue;
+//       }
+
+//       double t = q[i] / p[i];
+//       if (p[i] < 0) {
+//         t0 = max(t0, t);
+//       } else {
+//         t1 = min(t1, t);
+//       }
+
+//       if (t0 > t1) {
+//         return null;
+//       }
+//     }
+
+//     return [
+//       x1 + t0 * dx,
+//       y1 + t0 * dy,
+//       x1 + t1 * dx,
+//       y1 + t1 * dy,
+//     ];
+//   }
+
+//   void scanlineFill(Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
+//     List<int> sortedIndices = List<int>.generate(all_points.length, (i) => i);
+//     sortedIndices.sort((a, b) {
+//       int yCompare = all_points[a].dy.compareTo(all_points[b].dy);
+//       return yCompare == 0 ? all_points[a].dx.compareTo(all_points[b].dx) : yCompare;
+//     });
+
+//     List<EdgeEntry> aet = [];
+
+//     for (int y = 0; y < size.height.toInt(); y++) {
+//       while (sortedIndices.isNotEmpty && all_points[sortedIndices.first].dy.toInt() == y) {
+//         int currentIndex = sortedIndices.removeAt(0);
+//         int prevIndex = (currentIndex - 1 + all_points.length) % all_points.length;
+//         int nextIndex = (currentIndex + 1) % all_points.length;
+
+//         Point currentPoint = all_points[currentIndex];
+//         if (all_points[nextIndex].dy > currentPoint.dy) {
+//           aet.add(createEdge(all_points[currentIndex], all_points[nextIndex]));
+//         }
+//         if (all_points[prevIndex].dy > currentPoint.dy) {
+//           aet.add(createEdge(all_points[currentIndex], all_points[prevIndex]));
+//         }
+//       }
+
+//       aet.removeWhere((edge) => edge.yMax.toInt() == y);
+//       for (var edge in aet) {
+//         edge.x += edge.dx;
+//       }
+
+//       aet.sort((a, b) => (a.x).compareTo(b.x));
+
+//       for (int i = 0; i < aet.length; i += 2) {
+//         int startX = aet[i].x.toInt();
+//         int endX = aet[i + 1].x.toInt();
+//         for (int x = startX; x <= endX; x++) {
+//           drawPixel(pixels, size, Point(x.toDouble(), y.toDouble()), color(x, y));
+//         }
+//       }
+//     }
+//   }
+
+//   EdgeEntry createEdge(Point start, Point end) {
+//     double dx = (end.dx - start.dx) / (end.dy - start.dy);
+//     return EdgeEntry(
+//       x: start.dx,
+//       yMax: end.dy,
+//       dx: dx,
+//     );
+//   }
+
+//   @override
+//   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
+//     this.color = color;
+//     this.thickness = thickness;
+
+//     for (var i = 0; i < this.all_points.length -1; i++) {
+//       final distance = (all_points[i+1]-all_points[i]).distance;
+//       final distance1 = (originalPoint - all_points[i]).distance;
+//       final distance2 = (originalPoint - all_points[i+1]).distance;
+//       if((distance1 + distance2 - distance).abs() < 20){
+//         all_points[i] = newPoint;
+//       }
+//     }
+//   }
+
+//   double calc_distance(Point point1, Point point2){
+//     return math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
+//   }
+
+//   bool isClosed(Point point1, Point point2){
+//     final distance = calc_distance(point1, point2);
+//     return distance <= 17;
+//   }
+
+//   @override
+//   bool isCenterPoint(Point tappedPoint){ 
+//     int crossings = 0;
+//     for (int i = 0; i < all_points.length; i++) {
+//       int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
+//       Point point1 = all_points[i];
+//       Point point2 = all_points[next];
+
+//       if (((point1.dy > tappedPoint.dy) != (point2.dy > tappedPoint.dy)) &&
+//           (tappedPoint.dx < (point2.dx - point1.dx) * (tappedPoint.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
+//         crossings++;
+//       }
+//     }
+
+//     return (crossings % 2 != 0);
+//   }
+
+//   @override
+//   void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
+//     double dx = newPoint.dx - originalPoint.dx;
+//     double dy = newPoint.dy - originalPoint.dy;
+
+//     this.color = color;
+//     this.thickness = thickness;
+
+//     for (int i = 0; i < all_points.length; i++) {
+//       Point currentPoint = all_points[i];
+//       all_points[i] = Point(currentPoint.dx + dx, currentPoint.dy + dy);
+//     }
+
+//     print("Polygon moved to new position");
+//   }
+
+//   @override
+//   bool contains(Point touchedPoints) {
+//     for (var i = 0; i < this.all_points.length - 1; i++) {
+//       final distance = (all_points[i+1]-all_points[i]).distance;
+//       final distance1 = (touchedPoints - all_points[i]).distance;
+//       final distance2 = (touchedPoints - all_points[i+1]).distance;
+//       if((distance1 + distance2 - distance).abs() < 5){
+//         return true;
+//       }
+//     }
+
+//     int crossings = 0;
+//     for (int i = 0; i < all_points.length; i++) {
+//       int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
+//       Point point1 = all_points[i];
+//       Point point2 = all_points[next];
+
+//       if (((point1.dy > touchedPoints.dy) != (point2.dy > touchedPoints.dy)) &&
+//           (touchedPoints.dx < (point2.dx - point1.dx) * (touchedPoints.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
+//         crossings++;
+//       }
+//     }
+
+//     return (crossings % 2 != 0);
+//   }
+
+//   static Shape? fromJson(Map<String, dynamic> json) {
+//     return null;
+//   }
+
+//   @override
+//   Map<String, dynamic> toJson() {
+//     final all_points = <Map<String, double>>[];
+//     for (var i = 0; i < this.all_points.length; i++) {
+//       final point = this.all_points[i];
+//       all_points.add({'dx': point.dx, 'dy': point.dy});
+//     }
+//     return {
+//       'type': 'polygon',
+//       'points': points,
+//       'closed': closed,
+//       'thickness': thickness,
+//       'color': color.value,
+//     };
+//   }
+
+//   void drawPixel(Uint8List pixels, ui.Size size, Point point, ui.Color color) {
+//     final x = point.dx.toInt();
+//     final y = point.dy.toInt();
+//     if (x < 0 || x >= size.width || y < 0 || y >= size.height) {
+//       return;
+//     }
+//     final index = ((x + y * size.width) * 4).round();
+//     pixels[index] = color.red;
+//     pixels[index + 1] = color.green;
+//     pixels[index + 2] = color.blue;
+//     pixels[index + 3] = color.alpha;
+//   }
+
+//   @override
+//   String toString() {
+//     return "<${this.id}> Polygon Object: thickness ${this.thickness}, color ${this.color} \n";
+//   }
+// }
+
+
+// class EdgeEntry {
+//     double x;
+//     double yMax;
+//     double dx;
+
+//     EdgeEntry({
+//       required this.x,
+//       required this.yMax,
+//       required this.dx,
+//     });
+// }
+
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -7,13 +393,10 @@ import '../image.dart';
 import 'line.dart';
 import 'rectangle.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'dart:math' as math;
-
 
 class Polygon extends Shape {
 
-  // final List<Point> all_points = [];
   late List<Point> all_points;
   late List<Line> lines = []; 
   bool closed = false;
@@ -25,20 +408,11 @@ class Polygon extends Shape {
   ImageData? fillImage;
   Rectangle? clippingRectangle;
 
-  Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id)
-  {
-    // print("----- Polygon obj -----");
-    // print("start point dx: ${points[0].dx}, dy: ${points[0].dy}");
-    // print("end point dx: ${points[1].dx}, dy: ${points[1].dy}");
+  Polygon(List<Point> all_points, int thickness, Color color, int id, Color fillColor) : super(all_points, thickness, color, id) {
     this.all_points = all_points;
-    // for (var i = 0; i < this.all_points.length - 1; i++) {
-    //   print("start: (${this.all_points[i].dx}, ${all_points[i].dy})\n");
-    //   print("end: (${this.all_points[i+1].dx}, ${all_points[i+1].dy})\n");
-    // }
     this.closed = false;
     this.id = id;
     this.fillColor = fillColor;
-    // this.fillImage;
   }
 
   @override
@@ -53,8 +427,8 @@ class Polygon extends Shape {
       final point2 = all_points[i + 1];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
     }
-    if (this.isClosed(all_points[0], all_points[all_points.length - 1])) {
-      // print("isClosed() true!!\n");
+
+    if (isClosed(all_points[0], all_points[all_points.length - 1])) {
       final point1 = all_points[all_points.length - 1];
       final point2 = all_points[0];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
@@ -63,18 +437,12 @@ class Polygon extends Shape {
       if (fillColor != null && isFillColor == true) {
         scanlineFill(pixels, size, (x, y) => fillColor!);
       }
-      // check filling option
-
-      print("fillImage: ${this.fillImage}\n");
-      print("isFillImage: ${isFillImage}\n");
       if (this.fillImage != null && this.isFillImage == true) {
-
-        print("fillImage != null && isFillImage == true \n");
         scanlineFill(pixels, size, (x, y) {
-          final top = topLeft!.dy;
-          final left = topLeft!.dx;
-          final bottom = bottomRight!.dy;
-          final right = bottomRight!.dx;
+          final top = topLeft.dy;
+          final left = topLeft.dx;
+          final bottom = bottomRight.dy;
+          final right = bottomRight.dx;
 
           var u = (x - left) / (right - left) * fillImage!.width;
           var v = (y - top) / (bottom - top) * fillImage!.height;
@@ -93,6 +461,48 @@ class Polygon extends Shape {
         });
       }
     }
+
+    if (clippingRectangle != null) {
+      List<Point> clippedPoints = clipPolygon(all_points, clippingRectangle!);
+      connectClippedEdges(clippedPoints, pixels, size, isAntiAliased);
+    }
+  }
+
+  List<Point> clipPolygon(List<Point> points, Rectangle clippingRectangle) {
+    List<Point> clippedPoints = [];
+    for (int i = 0; i < points.length - 1; i++) {
+      var clippedLine = cohenSutherlandClip(
+        points[i].dx,
+        points[i].dy,
+        points[i + 1].dx,
+        points[i + 1].dy,
+        clippingRectangle.left,
+        clippingRectangle.top,
+        clippingRectangle.right,
+        clippingRectangle.bottom,
+      );
+      if (clippedLine != null) {
+        clippedPoints.add(Point(clippedLine[0], clippedLine[1]));
+        clippedPoints.add(Point(clippedLine[2], clippedLine[3]));
+      }
+    }
+    return clippedPoints;
+  }
+
+  void connectClippedEdges(List<Point> clippedPoints, Uint8List pixels, ui.Size size, bool isAntiAliased) {
+    if (clippedPoints.length < 2) {
+      return;
+    }
+
+    for (var i = 0; i < clippedPoints.length - 1; i++) {
+      final point1 = clippedPoints[i];
+      final point2 = clippedPoints[i + 1];
+      drawEdge(point1, point2, pixels, size, isAntiAliased);
+    }
+
+    final point1 = clippedPoints[clippedPoints.length - 1];
+    final point2 = clippedPoints[0];
+    drawEdge(point1, point2, pixels, size, isAntiAliased);
   }
 
   Point get topLeft {
@@ -108,19 +518,16 @@ class Polygon extends Shape {
   }
 
   void drawEdge(Point point1, Point point2, Uint8List pixels, ui.Size size, bool isAntiAliased) {
-
     List<Point> linePoints = [
       point1,  
       point2 
     ];
 
     if(clippingRectangle == null){
-      // default
       final line = Line(linePoints, thickness, color, -10); // id
       line.draw(pixels, size, isAntiAliased: isAntiAliased);
     } else {
-      // apply clipping rectangle
-      var lineClipping = liangBarsky(
+      var lineClipping = cohenSutherlandClip(
         point1.dx,
         point1.dy,
         point2.dx,
@@ -139,42 +546,76 @@ class Polygon extends Shape {
     }
   }
 
-  List<double>? liangBarsky(double x1, double y1, double x2, double y2,
-      double left, double top, double right, double bottom) {
-    double t0 = 0.0;
-    double t1 = 1.0;
-    double dx = x2 - x1;
-    double dy = y2 - y1;
+  // Cohen-Sutherland clipping algorithm constants
+  static const int INSIDE = 0; // 0000
+  static const int LEFT = 1;   // 0001
+  static const int RIGHT = 2;  // 0010
+  static const int BOTTOM = 4; // 0100
+  static const int TOP = 8;    // 1000
 
-    final List<double> p = [-dx, dx, -dy, dy];
-    final List<double> q = [x1 - left, right - x1, y1 - top, bottom - y1];
+  int computeOutCode(double x, double y, double left, double top, double right, double bottom) {
+    int code = INSIDE;
 
-    for (int i = 0; i < 4; i++) {
-      if (p[i] == 0) {
-        if (q[i] < 0) {
-          return null;
-        }
-        continue;
-      }
+    if (x < left) {
+      code |= LEFT;
+    } else if (x > right) {
+      code |= RIGHT;
+    }
+    if (y < top) {
+      code |= TOP;
+    } else if (y > bottom) {
+      code |= BOTTOM;
+    }
 
-      double t = q[i] / p[i];
-      if (p[i] < 0) {
-        t0 = max(t0, t);
+    return code;
+  }
+
+  List<double>? cohenSutherlandClip(double x1, double y1, double x2, double y2,
+                                    double left, double top, double right, double bottom) {
+    int outcode0 = computeOutCode(x1, y1, left, top, right, bottom);
+    int outcode1 = computeOutCode(x2, y2, left, top, right, bottom);
+    bool accept = false;
+
+    while (true) {
+      if ((outcode0 | outcode1) == 0) {
+        accept = true;
+        break;
+      } else if ((outcode0 & outcode1) != 0) {
+        break;
       } else {
-        t1 = min(t1, t);
-      }
+        double x, y;
+        int outcodeOut = outcode0 != 0 ? outcode0 : outcode1;
 
-      if (t0 > t1) {
-        return null;
+        if ((outcodeOut & TOP) != 0) {
+          x = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
+          y = top;
+        } else if ((outcodeOut & BOTTOM) != 0) {
+          x = x1 + (x2 - x1) * (bottom - y1) / (y2 - y1);
+          y = bottom;
+        } else if ((outcodeOut & RIGHT) != 0) {
+          y = y1 + (y2 - y1) * (right - x1) / (x2 - x1);
+          x = right;
+        } else {
+          y = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
+          x = left;
+        }
+
+        if (outcodeOut == outcode0) {
+          x1 = x;
+          y1 = y;
+          outcode0 = computeOutCode(x1, y1, left, top, right, bottom);
+        } else {
+          x2 = x;
+          y2 = y;
+          outcode1 = computeOutCode(x2, y2, left, top, right, bottom);
+        }
       }
     }
 
-    return [
-      x1 + t0 * dx,
-      y1 + t0 * dy,
-      x1 + t1 * dx,
-      y1 + t1 * dy,
-    ];
+    if (accept) {
+      return [x1, y1, x2, y2];
+    }
+    return null;
   }
 
   void scanlineFill(Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
@@ -229,23 +670,16 @@ class Polygon extends Shape {
 
   @override
   void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
-    // updateLines(color, thickness);
-    print("polygon moving vertex is called \n");
-
-    print(originalPoint);
-    print(newPoint);
-
     this.color = color;
     this.thickness = thickness;
 
     for (var i = 0; i < this.all_points.length -1; i++) {
       final distance = (all_points[i+1]-all_points[i]).distance;
-        final distance1 = (originalPoint - all_points[i]).distance;
-        final distance2 = (originalPoint - all_points[i+1]).distance;
-        if((distance1 + distance2 - distance).abs() < 20){
-          print("newPoint is assgined \n");
-          all_points[i] = newPoint;
-        }
+      final distance1 = (originalPoint - all_points[i]).distance;
+      final distance2 = (originalPoint - all_points[i+1]).distance;
+      if((distance1 + distance2 - distance).abs() < 20){
+        all_points[i] = newPoint;
+      }
     }
   }
 
@@ -253,46 +687,36 @@ class Polygon extends Shape {
     return math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
   }
 
-  // check if the start point is closed to the last point
   bool isClosed(Point point1, Point point2){
     final distance = calc_distance(point1, point2);
-    // print("isClosed distance: $distance");
     return distance <= 17;
   }
 
   @override
   bool isCenterPoint(Point tappedPoint){ 
-    print("isCenterPoint is called!!!!!!!!!!!!!!!!\n");
-    // for moving polygone (supposed inside the graph clicked)
     int crossings = 0;
     for (int i = 0; i < all_points.length; i++) {
       int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
       Point point1 = all_points[i];
       Point point2 = all_points[next];
 
-      // Check if the line from point1 to point2 crosses the line from tappedPoint horizontally
       if (((point1.dy > tappedPoint.dy) != (point2.dy > tappedPoint.dy)) &&
           (tappedPoint.dx < (point2.dx - point1.dx) * (tappedPoint.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
         crossings++;
       }
     }
 
-    // If the number of crossings is odd, the point is inside the polygon
-    // print('is it the center point? : ${crossings % 2}\n');
     return (crossings % 2 != 0);
   }
 
   @override
   void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
-    // Calculate the differences in x and y directions
     double dx = newPoint.dx - originalPoint.dx;
     double dy = newPoint.dy - originalPoint.dy;
 
-    // Update color and thickness properties
     this.color = color;
     this.thickness = thickness;
 
-    // Move all points by the calculated differences
     for (int i = 0; i < all_points.length; i++) {
       Point currentPoint = all_points[i];
       all_points[i] = Point(currentPoint.dx + dx, currentPoint.dy + dy);
@@ -301,56 +725,33 @@ class Polygon extends Shape {
     print("Polygon moved to new position");
   }
 
-  //------- Edit graph -------
   @override
   bool contains(Point touchedPoints) {
-
-      // check if the click point is on vertex
-      for (var i = 0; i < this.all_points.length - 1; i++) {
-        final distance = (all_points[i+1]-all_points[i]).distance;
-        final distance1 = (touchedPoints - all_points[i]).distance;
-        final distance2 = (touchedPoints - all_points[i+1]).distance;
-        if((distance1 + distance2 - distance).abs() < 5){
-          return true;
-        }
+    for (var i = 0; i < this.all_points.length - 1; i++) {
+      final distance = (all_points[i+1]-all_points[i]).distance;
+      final distance1 = (touchedPoints - all_points[i]).distance;
+      final distance2 = (touchedPoints - all_points[i+1]).distance;
+      if((distance1 + distance2 - distance).abs() < 5){
+        return true;
       }
+    }
 
-      // check if the click point is inside the shape
-      int crossings = 0;
-      for (int i = 0; i < all_points.length; i++) {
-        int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
-        Point point1 = all_points[i];
-        Point point2 = all_points[next];
+    int crossings = 0;
+    for (int i = 0; i < all_points.length; i++) {
+      int next = (i + 1) % all_points.length; // Ensure loop back to start for last segment
+      Point point1 = all_points[i];
+      Point point2 = all_points[next];
 
-        // Check if the line from point1 to point2 crosses the line from tappedPoint horizontally
-        if (((point1.dy > touchedPoints.dy) != (point2.dy > touchedPoints.dy)) &&
-            (touchedPoints.dx < (point2.dx - point1.dx) * (touchedPoints.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
-          crossings++;
-        }
+      if (((point1.dy > touchedPoints.dy) != (point2.dy > touchedPoints.dy)) &&
+          (touchedPoints.dx < (point2.dx - point1.dx) * (touchedPoints.dy - point1.dy) / (point2.dy - point1.dy) + point1.dx)) {
+        crossings++;
       }
+    }
 
-      // If the number of crossings is odd, the point is inside the polygon
-      // print('is it the center point? : ${crossings % 2}\n');
-      return (crossings % 2 != 0);
-
-      // return false;
+    return (crossings % 2 != 0);
   }
 
-  //------ File Manager ------
   static Shape? fromJson(Map<String, dynamic> json) {
-    // if (json['type'] == 'polygon') {
-    //   final points = <Point>[];
-    //   for (var i = 0; i < json['points'].length; i++) {
-    //     final point = json['points'][i];
-    //     all_points.add(Point(point['x'], point['y']));
-    //   }
-   
-    //   return Polygon(all_points, ui.Offset.zero,
-    //       closed: json['closed'],
-    //       thickness: json['thickness'],
-    //       color: ui.Color(json['color'])
-    //   );
-    // }
     return null;
   }
 
