@@ -30,8 +30,9 @@ class Polygon extends Shape {
     this.closed = false;
     this.id = id;
     this.fillColor = fillColor;
+    // this.isFillColor = fillColor != null;
   }
-
+  
   @override
   void draw(Uint8List pixels, ui.Size size, {bool isAntiAliased = false}) {
 
@@ -86,8 +87,7 @@ class Polygon extends Shape {
       connectClippedEdges(all_points, pixels, size, isAntiAliased);
     }
   }
-
-  // List<Point> clipPolygon(List<Point> points, Rectangle clippingRectangle) {
+  
   void clipPolygon(List<Point> points, Rectangle clippingRectangle) {
     List<Point> clippedPoints = [];
     for (int i = 0; i < points.length - 1; i++) {
@@ -107,7 +107,7 @@ class Polygon extends Shape {
       }
     }
     // return clippedPoints;
-    all_points = clippedPoints; // Assign clipped points to all_points
+    this.all_points = clippedPoints; // Assign clipped points to all_points
   }
 
   void connectClippedEdges(List<Point> clippedPoints, Uint8List pixels, ui.Size size, bool isAntiAliased) {
@@ -289,25 +289,6 @@ class Polygon extends Shape {
     );
   }
 
-  @override
-  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
-    this.color = color;
-    this.thickness = thickness;
-
-    for (var i = 0; i < this.all_points.length -1; i++) {
-      final distance = (all_points[i+1]-all_points[i]).distance;
-      final distance1 = (originalPoint - all_points[i]).distance;
-      final distance2 = (originalPoint - all_points[i+1]).distance;
-      if((distance1 + distance2 - distance).abs() < 20){
-        all_points[i] = newPoint;
-      }
-    }
-
-    if(this.fillImage != null){
-       updateBoundingBox();
-    }
-  }
-
   double calc_distance(Point point1, Point point2){
     return math.sqrt(math.pow(point1.dx - point2.dx, 2) + math.pow(point1.dy - point2.dy, 2));
   }
@@ -335,6 +316,20 @@ class Polygon extends Shape {
   }
 
   @override
+  void movingVertex(Point originalPoint, Point newPoint, Color color, int thickness){
+    this.color = color;
+    this.thickness = thickness;
+
+    for (var i = 0; i < this.all_points.length; i++) {
+      final distance = (originalPoint - all_points[i]).distance;
+      if (distance < 40) {  // 20ピクセル以内なら頂点と見なす
+        all_points[i] = newPoint;
+        return;
+      }
+    }
+  }
+
+  @override
   void movingShape(Point originalPoint, Point newPoint, Color color, int thickness) {
     double dx = newPoint.dx - originalPoint.dx;
     double dy = newPoint.dy - originalPoint.dy;
@@ -355,6 +350,12 @@ class Polygon extends Shape {
   }
 
   void updateBoundingBox() {
+
+    if (all_points.isEmpty) {
+      print("all points are empty\n");
+      return;
+    }
+
     final top = all_points.reduce((value, element) {
       if (element.dy < value.dy) {
         return element;
@@ -411,8 +412,8 @@ class Polygon extends Shape {
   }
 
   static Shape? fromJson(Map<String, dynamic> json) {
-
     print("polygon fromJson is called\n");
+
     if (json['type'] == 'polygon') {
       final points = <Point>[];
       for (var i = 0; i < json['points'].length; i++) {
@@ -425,12 +426,29 @@ class Polygon extends Shape {
         print("end: (${points[i+1].dx}, ${points[i+1].dy})\n");
       }
 
-      var fillImage = json['fillImage'] != null
-          ? ImageData.fromJson(json['fillImage'])
-          : null;
-      var fillColor = json['fillColor'] != null
-          ? Color(json['fillColor'])
-          : null;
+      bool _isFillColor = false;
+      bool _isFillImage = false;
+
+      ImageData? fillImage;
+      if (json['fillImage'] != null) {
+        fillImage = ImageData.fromJson(json['fillImage']);
+        _isFillImage = true;
+        _isFillColor = false;
+        print("fillImage:\n");
+        // print(fillImage);
+      } else {
+        fillImage = null;
+        print("null is not called right?\n");
+      }
+
+      Color fillColor;
+      if (json['fillColor'] != null) {
+        fillColor = Color(json['fillColor']);
+        _isFillImage = false;
+        _isFillColor = true;
+      } else {
+        fillColor = Colors.transparent;
+      }
 
       // clippingRectangleの処理を追加
       Rectangle? clippingRectangle = json['clipRectangle'] != null
@@ -442,12 +460,16 @@ class Polygon extends Shape {
         json['thickness'], 
         Color(json['color']), 
         json['id'], 
-        fillColor ?? Colors.transparent // Provide a default fill color if null
+        fillColor, // Provide a default fill color if null
       );
 
       temp_polygon.fillImage = fillImage;
       temp_polygon.clippingRectangle = clippingRectangle;
+      temp_polygon.isFillColor = _isFillColor;
+      temp_polygon.isFillImage = _isFillImage;
 
+      print(temp_polygon.fillColor);
+  
       return temp_polygon;
     }
     return null;
@@ -466,9 +488,9 @@ class Polygon extends Shape {
       'closed': closed,
       'thickness': thickness,
       'color': color.value,
-      'fillColor': fillColor?.value,
-      'fillImage': fillImage?.toJson(),
-      'clipRectangle': clippingRectangle?.toJson(),
+      'fillColor': this.fillColor?.value,
+      'fillImage': this.fillImage?.toJson(),
+      'clipRectangle': this.clippingRectangle?.toJson(),
       'id': id,
     };
   }

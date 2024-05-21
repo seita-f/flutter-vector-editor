@@ -420,11 +420,14 @@ class _MyHomePageState extends State<MyHomePage> {
       print("No file selected.");
       return;
     }
-    shapes = await FileManager.loadShapes(filePath);
-    setState((
-      
+    
+    // Load shapes asynchronously
+    List<Shape> loadedShapes = await FileManager.loadShapes(filePath);
 
-    ) {});
+    // Update the state
+    setState(() {
+      shapes = loadedShapes;
+    });
   }
 
   Future<void> _pickImage() async {
@@ -472,7 +475,8 @@ class _MyHomePageState extends State<MyHomePage> {
       height,
       ui.PixelFormat.rgba8888,
       (ui.Image img) {
-        completer.complete(img);
+        completer.complete(img);  
+        print("Image decoded successfully");
       },
     );
     return completer.future;
@@ -480,6 +484,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _convertImage() async {
     if (fillImage != null) {
+      print("_convertImage()\n");
       final ui.Image image = await decodeImageFromPixels(
         fillImage!.pixels,
         fillImage!.width,
@@ -493,10 +498,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void didUpdateWidget(covariant MyHomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (fillImage != null) {
-      _convertImage();
-    }
+    setState(() {
+      super.didUpdateWidget(oldWidget);
+      print("didUpdateWIdget()\n");
+      print("fillImage: $fillImage");
+      if (fillImage != null) {
+        _convertImage();
+      }
+    });
   }
 
   //----- Functions -----
