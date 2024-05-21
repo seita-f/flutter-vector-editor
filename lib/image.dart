@@ -17,8 +17,7 @@ class ImageData {
     return ui.Color.fromARGB(
         pixels[index + 3], pixels[index], pixels[index + 1], pixels[index + 2]);
   }
-
-
+  
   Map<String, dynamic> toJson() {
     return {'pixels': base64.encode(pixels), 'width': width, 'height': height};
   }
@@ -26,5 +25,10 @@ class ImageData {
   static ImageData fromJson(Map<String, dynamic> json) {
     return ImageData(
         base64.decode(json['pixels']), json['width'], json['height']);
+  }
+
+  @override
+  String toString() {
+    return 'ImageData(width: $width, height: $height, pixels: ${base64.encode(pixels)})';
   }
 }
