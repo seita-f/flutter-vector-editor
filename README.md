@@ -1,6 +1,26 @@
-# lab3
+# Vector Editor App
+<b>All drawings are made through pixel manipulation.<b>
 
-A new Flutter project.
+![Screen Shot 2024-05-22 at 14 08 46](https://github.com/seita-f/flutter-vector-editor/assets/128184233/9924081e-a471-47a5-8c92-d91563923c0d)
+
+## ALgorithm
+
+Line: <br>
+- DDA Algorithms
+- Copying pixels (thick line)
+  
+Circle: <br>
+- Midpoint circle
+  
+Anti-Aliasing: <br>
+- Xiaolin Wu line and circle drawing
+
+Clipping:<br>
+- Cohen-Sutherland (clipping polygons to a rectangle)
+  
+Filling:<br>
+- Scan-Line & Edge Table
+
 
 ## Getting Started
 
@@ -14,3 +34,5 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+
