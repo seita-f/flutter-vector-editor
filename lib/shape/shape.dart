@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'line.dart';
 import 'circle.dart';
 import 'polygon.dart';
+import 'rectangle.dart';
 
 abstract class Shape {
 
@@ -32,12 +33,17 @@ abstract class Shape {
   void movingShape(Point originalPoint, Point newPoint, Color color, int thickness);
 
   static Shape? fromJson(Map<String, dynamic> json) {
+
     String type = json['type'];
     switch (type) {
       case 'line':
         return Line.fromJson(json);
       case 'circle':
         return Circle.fromJson(json);
+      case 'polygon':
+        return Polygon.fromJson(json);
+      case 'rectangle':
+        return Rectangle.fromJson(json);
       default:
         return null;  // 未知のタイプの場合はnullを返すか、例外を投げる
     }

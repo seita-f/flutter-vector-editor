@@ -88,6 +88,7 @@ class Polygon extends Shape {
     }
   }
   
+  // ---------- Clipping Algorithm ----------
   void clipPolygon(List<Point> points, Rectangle clippingRectangle) {
     List<Point> clippedPoints = [];
     for (int i = 0; i < points.length - 1; i++) {
@@ -110,17 +111,92 @@ class Polygon extends Shape {
     this.all_points = clippedPoints; // Assign clipped points to all_points
   }
 
+  // Cohen-Sutherland clipping algorithm constants (4 bits area code for location)
+  static const int INSIDE = 0; // 0000
+  static const int LEFT = 1;   // 0001
+  static const int RIGHT = 2;  // 0010
+  static const int BOTTOM = 4; // 0100
+  static const int TOP = 8;    // 1000
+
+  int computeOutCode(double x, double y, double left, double top, double right, double bottom) {
+    int code = INSIDE;
+
+    if (x < left) {
+      code |= LEFT;
+    } else if (x > right) {
+      code |= RIGHT;
+    }
+    if (y < top) {
+      code |= TOP;
+    } else if (y > bottom) {
+      code |= BOTTOM;
+    }
+
+    return code;
+  }
+
+  List<double>? cohenSutherlandClip(double x1, double y1, double x2, double y2,
+                                    double left, double top, double right, double bottom) {
+    int outcode0 = computeOutCode(x1, y1, left, top, right, bottom); // out code for start point
+    int outcode1 = computeOutCode(x2, y2, left, top, right, bottom); // out code for end point
+    bool accept = false;
+
+    while (true) {
+      if ((outcode0 | outcode1) == 0) {  // both points are inside
+        accept = true;
+        break;
+      } else if ((outcode0 & outcode1) != 0) { // both points are outside 
+        break;
+      } else {
+        double x, y;
+        int outcodeOut = outcode0 != 0 ? outcode0 : outcode1;
+        
+        if ((outcodeOut & TOP) != 0) { // if the point is outside of TOP, then its y = top
+          x = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
+          y = top;
+        } else if ((outcodeOut & BOTTOM) != 0) { // if the point is outside of Bottom, then its y = bottom
+          x = x1 + (x2 - x1) * (bottom - y1) / (y2 - y1);
+          y = bottom;
+        } else if ((outcodeOut & RIGHT) != 0) { // if the point is outside of Right, then its x = right
+          y = y1 + (y2 - y1) * (right - x1) / (x2 - x1);
+          x = right;
+        } else { // if the point is outside of Left, then its x = left
+          y = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
+          x = left;
+        }
+
+        // update the start point, end point and outcode
+        if (outcodeOut == outcode0) {
+          x1 = x;
+          y1 = y;
+          outcode0 = computeOutCode(x1, y1, left, top, right, bottom);
+        } else {
+          x2 = x;
+          y2 = y;
+          outcode1 = computeOutCode(x2, y2, left, top, right, bottom);
+        }
+      }
+    }
+
+    if (accept) {
+      return [x1, y1, x2, y2];
+    }
+    return null;
+  }
+
   void connectClippedEdges(List<Point> clippedPoints, Uint8List pixels, ui.Size size, bool isAntiAliased) {
     if (clippedPoints.length < 2) {
       return;
     }
 
+    // draw edges bwetween connected points
     for (var i = 0; i < clippedPoints.length - 1; i++) {
       final point1 = clippedPoints[i];
       final point2 = clippedPoints[i + 1];
       drawEdge(point1, point2, pixels, size, isAntiAliased);
     }
 
+    // close the polygon
     final point1 = clippedPoints[clippedPoints.length - 1];
     final point2 = clippedPoints[0];
     drawEdge(point1, point2, pixels, size, isAntiAliased);
@@ -166,80 +242,12 @@ class Polygon extends Shape {
       line.draw(pixels, size, isAntiAliased: isAntiAliased);
     }
   }
+  // ------------------------------------------
 
-  // Cohen-Sutherland clipping algorithm constants
-  static const int INSIDE = 0; // 0000
-  static const int LEFT = 1;   // 0001
-  static const int RIGHT = 2;  // 0010
-  static const int BOTTOM = 4; // 0100
-  static const int TOP = 8;    // 1000
-
-  int computeOutCode(double x, double y, double left, double top, double right, double bottom) {
-    int code = INSIDE;
-
-    if (x < left) {
-      code |= LEFT;
-    } else if (x > right) {
-      code |= RIGHT;
-    }
-    if (y < top) {
-      code |= TOP;
-    } else if (y > bottom) {
-      code |= BOTTOM;
-    }
-
-    return code;
-  }
-
-  List<double>? cohenSutherlandClip(double x1, double y1, double x2, double y2,
-                                    double left, double top, double right, double bottom) {
-    int outcode0 = computeOutCode(x1, y1, left, top, right, bottom);
-    int outcode1 = computeOutCode(x2, y2, left, top, right, bottom);
-    bool accept = false;
-
-    while (true) {
-      if ((outcode0 | outcode1) == 0) {
-        accept = true;
-        break;
-      } else if ((outcode0 & outcode1) != 0) {
-        break;
-      } else {
-        double x, y;
-        int outcodeOut = outcode0 != 0 ? outcode0 : outcode1;
-
-        if ((outcodeOut & TOP) != 0) {
-          x = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
-          y = top;
-        } else if ((outcodeOut & BOTTOM) != 0) {
-          x = x1 + (x2 - x1) * (bottom - y1) / (y2 - y1);
-          y = bottom;
-        } else if ((outcodeOut & RIGHT) != 0) {
-          y = y1 + (y2 - y1) * (right - x1) / (x2 - x1);
-          x = right;
-        } else {
-          y = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
-          x = left;
-        }
-
-        if (outcodeOut == outcode0) {
-          x1 = x;
-          y1 = y;
-          outcode0 = computeOutCode(x1, y1, left, top, right, bottom);
-        } else {
-          x2 = x;
-          y2 = y;
-          outcode1 = computeOutCode(x2, y2, left, top, right, bottom);
-        }
-      }
-    }
-
-    if (accept) {
-      return [x1, y1, x2, y2];
-    }
-    return null;
-  }
-
+  // ---------- Filling Algotithm -------------
   void scanlineFill(Uint8List pixels, ui.Size size, ui.Color Function(int x, int y) color) {
+
+    // sorting the vertex by y (if y is the same, then x)
     List<int> sortedIndices = List<int>.generate(all_points.length, (i) => i);
     sortedIndices.sort((a, b) {
       int yCompare = all_points[a].dy.compareTo(all_points[b].dy);
@@ -248,13 +256,19 @@ class Polygon extends Shape {
 
     List<EdgeEntry> aet = [];
 
+    // iterate scan-line
     for (int y = 0; y < size.height.toInt(); y++) {
+
+      // adding the edge
       while (sortedIndices.isNotEmpty && all_points[sortedIndices.first].dy.toInt() == y) {
+        // remove current y achiving scan-line from the vertex list
         int currentIndex = sortedIndices.removeAt(0);
         int prevIndex = (currentIndex - 1 + all_points.length) % all_points.length;
         int nextIndex = (currentIndex + 1) % all_points.length;
-
+        
         Point currentPoint = all_points[currentIndex];
+
+        // if neighber vertexes are the under than the current one, add it to AET
         if (all_points[nextIndex].dy > currentPoint.dy) {
           aet.add(createEdge(all_points[currentIndex], all_points[nextIndex]));
         }
@@ -263,13 +277,16 @@ class Polygon extends Shape {
         }
       }
 
+      // remove end edge and update x
       aet.removeWhere((edge) => edge.yMax.toInt() == y);
       for (var edge in aet) {
         edge.x += edge.dx;
       }
 
+      // sort AET by x for the pair 
       aet.sort((a, b) => (a.x).compareTo(b.x));
 
+      // fill between edges
       for (int i = 0; i < aet.length; i += 2) {
         int startX = aet[i].x.toInt();
         int endX = aet[i + 1].x.toInt();
@@ -287,6 +304,37 @@ class Polygon extends Shape {
       yMax: end.dy,
       dx: dx,
     );
+  }
+
+  // ----------------------------------------------
+
+  void rotate(Point centerPoint){
+    print("Polygon rotate() is called\n");
+    print("Center Point for the rotation: ${centerPoint}\n");
+
+    // rotate 90 degrees for each call
+
+    // x0 and y0 are the coordinates of the center of rotation 
+    // x2 = cos(θ) * (x1 - x0) - sin(θ) * (y1 - y0) + x0
+    // y2 = sin(θ) * (x1 - x0) - cos(θ) * (y1 - y0) + y0
+
+    double cx = centerPoint.dx;
+    double cy = centerPoint.dy;
+    double angle = pi / 5;    // convert 90 degrees to radian 
+
+    List<Point> rotatedPoints = [];
+
+    for (var point in all_points) {
+      double x = point.dx;
+      double y = point.dy;
+
+      double newX = cos(angle) * (x - cx) - sin(angle) * (y - cy) + cx;
+      double newY = sin(angle) * (x - cx) + cos(angle) * (y - cy) + cy;
+
+      rotatedPoints.add(Point(newX, newY));
+    }
+
+    this.all_points = rotatedPoints;
   }
 
   double calc_distance(Point point1, Point point2){
@@ -322,7 +370,7 @@ class Polygon extends Shape {
 
     for (var i = 0; i < this.all_points.length; i++) {
       final distance = (originalPoint - all_points[i]).distance;
-      if (distance < 40) {  // 20ピクセル以内なら頂点と見なす
+      if (distance < 40) {  
         all_points[i] = newPoint;
         return;
       }
@@ -383,7 +431,6 @@ class Polygon extends Shape {
     boundingTopLeft = Point(left, top);
     boundingBottomRight = Point(right, bottom);
   }
-
 
   @override
   bool contains(Point touchedPoints) {
@@ -517,7 +564,7 @@ class Polygon extends Shape {
 class EdgeEntry {
     double x;
     double yMax;
-    double dx;
+    double dx;  // 1/m : スキャンラインが1ピクセル上昇するごとにX座標がどれだけ変化するかを表す
 
     EdgeEntry({
       required this.x,

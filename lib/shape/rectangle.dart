@@ -40,7 +40,6 @@ class Rectangle extends Shape {
     lower_line = [Point(this.end_dx, this.end_dy), Point(this.start_dx, this.end_dy)];
     // left line
     left_line = [Point(this.start_dx, this.end_dy), Point(this.start_dx, this.start_dy)];
-
   }
     
   @override
