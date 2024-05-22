@@ -97,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Point startPoint = Point(0, 0);  // Initialize with default values
   Point endPoint = Point(0, 0);
   Point previousToppedPosition = Point(0, 0);
+  Point rotatePoint = Point(0, 0);
 
   // Index
   int currentShapeIndex = -1;
@@ -332,6 +333,19 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _rotatePolygon(){
+    setState((){
+      print("Rotate Button is clicked!\n");
+      for (var shape in shapes) {
+        if (selectedShape?.getId() == shape.getId()) {
+          if (shape is Polygon) {
+            shape.rotate(rotatePoint);
+          }
+        }
+      }
+    });
+  }
+
   void deleteAll(){
     shapes.clear();  // Clears all shapes
     polygonPoints.clear();
@@ -357,6 +371,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print("TapUp() called! It is an edit mode");
       // print(details.localPosition);
       Point tappedPoint = Point(details.localPosition.dx, details.localPosition.dy);
+      rotatePoint = Point(details.localPosition.dx, details.localPosition.dy); // rotation 
 
       for (var shape in shapes) {
         if(shape.contains(tappedPoint) == true){
@@ -411,7 +426,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
+  
   void loadFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result == null) return; // Exit if no file picked
@@ -822,6 +837,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                     });
                                   },
                                 ),
+                              ),
+                              ElevatedButton(
+                                onPressed: (){
+                                  _rotatePolygon();
+                                },
+                                child: Text('Rotate Polygon'),
                               ),
                               // ----- DELETE ALL -----
                               Expanded(
