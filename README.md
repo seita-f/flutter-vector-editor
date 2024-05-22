@@ -19,9 +19,9 @@ Clipping:<br>
 - Cohen-Sutherland (clipping polygons to a rectangle)
   
 Filling:<br>
-- Scan-Line & Edge Table
+- Scan-Line & Edge Table <br><br>
 
-<br>
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
