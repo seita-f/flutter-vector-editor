@@ -3,7 +3,7 @@
 
 ![Screen Shot 2024-05-22 at 14 08 46](https://github.com/seita-f/flutter-vector-editor/assets/128184233/9924081e-a471-47a5-8c92-d91563923c0d)
 
-## ALgorithm
+## Algorithm
 
 Line: <br>
 - DDA Algorithms
